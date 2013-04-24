@@ -1,6 +1,6 @@
 <?php
 /**
- * User: VOVA
+ * User: palkan
  * Date: 19.04.13
  * Time: 14:26
  */
@@ -31,7 +31,7 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
             'NAME' => '%vasya'
         );
 
-        $arr = filter()->by_id(1,2)->by_name('%vasya')->toArray(self::$map,true);
+        $arr = filter()->by_id(1,2)->by_name('%vasya')->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
     }
@@ -51,7 +51,7 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
 
 
 
-        $arr = filter()->by_id(1,2)->by_name('%vasya%')->by_last_login_between(1356998400,1356998400)->by_active(true)->toArray(self::$map,true);
+        $arr = filter()->by_id(1,2)->by_name('%vasya%')->by_last_login_between(1356998400,1356998400)->by_active(true)->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
 
@@ -66,7 +66,7 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
         );
 
 
-        $arr = filter()->by_id(1)->_or(filter()->by_name('%vasya%'),filter()->by_last_name_not('Иван'))->toArray(self::$map,true);
+        $arr = filter()->by_id(1)->_or(filter()->by_name('%vasya%'),filter()->by_last_name_not('Иван'))->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
 
@@ -90,7 +90,7 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
                 filter()->by_last_name('Иванов'),
                 filter()->by_last_name('Сидоров')
             )
-        )->toArray(self::$map,true);
+        )->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
 
@@ -106,7 +106,7 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
 
 
 
-        $arr = filter()->by_login('vova@dem.ru','vova@dem.com')->toArray(self::$map,true);
+        $arr = filter()->by_login('vova@dem.ru','vova@dem.com')->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
 
@@ -121,7 +121,7 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
 
 
 
-        $arr = filter()->by_login('vova%','%vovva%')->toArray(self::$map,true);
+        $arr = filter()->by_login('vova%','%vovva%')->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
 

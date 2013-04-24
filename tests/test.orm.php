@@ -1,15 +1,15 @@
 <?php
 /**
- * User: VOVA
+ * User: palkan
  * Date: 19.04.13
  * Time: 12:58
  */
 
-require_once(dirname(__FILE__).'/../base/bitrix.orm.php');
+require_once(dirname(__FILE__).'/../base/iblock.orm.php');
 require_once(dirname(__FILE__).'/../base/user.orm.php');
+require_once(dirname(__FILE__).'/../base/custom.orm.php');
 
-class Test extends BitrixORM{
-
+class Test extends IBlockORM{
 
     public $partner_id;
 
@@ -45,14 +45,40 @@ class TestUserORMMap extends BitrixORMMapUser{
 }
 
 
-class TestORMMap extends BitrixORMMap{
+class TestCustom extends CustomORM{
+
+
+    function __construct(){
+        parent::__construct(new CustomORMMap());
+    }
+
+
+}
+
+
+class TestCustomORMMap extends CustomORMMap{
+
+    public $table = 'test';
+    public $fields = array(
+        array('bname' => 'user_id', 'name' => 'user_id', 'type' => 'int'),
+        array('bname' => 'partner_id', 'name' => 'partner_id', 'type' => 'int'),
+        array('bname' => 'name', 'name' => 'name', 'type' => 'string'),
+        array('bname' => 'active', 'name' => 'active', 'type' => 'bool'),
+        array('bname' => 'date', 'name' => 'date', 'type' => 'datetime', 'data' => 'Y-m-d H:i:s')
+    );
+
+}
+
+
+
+class TestORMMap extends IBlockORMMap{
 
     public $iblock_id = 666;
 
 
     public $props = array(
         array('bname' => 'PROPERTY_PARTNER_ID', 'name' => 'partner_id', 'type' => 'int'),
-        array('bname' => 'PROPERTY_TYPE', 'name' =>'type', 'type' => 'enum', 'scheme' => array(
+        array('bname' => 'PROPERTY_TYPE', 'name' =>'type', 'type' => 'enum', 'data' => array(
             'type' => 'string',
             'list' =>
                 array(
@@ -61,7 +87,7 @@ class TestORMMap extends BitrixORMMap{
                    array('value' => 'undef', 'bvalue' => 'UNDEFINED', 'enum_id' => 13)
                 )
         )),
-        array('bname' => 'PROPERTY_IS_PUBLIC', 'name' => 'is_public', 'type' => 'enum', 'scheme' => array(
+        array('bname' => 'PROPERTY_IS_PUBLIC', 'name' => 'is_public', 'type' => 'enum', 'data' => array(
             'type' => 'bool',
             'list' =>
             array(

@@ -1,6 +1,6 @@
 <?php
 /**
- * User: VOVA
+ * User: palkan
  * Date: 19.04.13
  * Time: 14:26
  */
@@ -54,7 +54,7 @@ class BFilterTest extends PHPUnit_Framework_TestCase {
             'ID' => array(1,2),
             'NAME' => '%vasya%',
             '><DATE_CREATE' => array("01.01.2013 00:00:00","01.01.2013 00:00:00"),
-            'PROPERTY_TYPE' => array(array('ENUM_ID'=>11),array('ENUM_ID'=>12)),
+            'PROPERTY_TYPE' => array(11,12),
             'ACTIVE' => 'Y'
         );
 

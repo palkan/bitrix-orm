@@ -8,13 +8,7 @@
 
 require_once(dirname(__FILE__).'/bitrix.orm.php');
 
-class BitrixUserORM implements tSerializable{
-
-    /**
-     * @var BitrixORMMapUser
-     */
-
-    protected $map;
+class BitrixUserORM extends BitrixORM{
 
     //---- Begin: Common fields ----//
 
@@ -131,29 +125,8 @@ class BitrixUserORM implements tSerializable{
     }
 
 
-    /**
-     *
-     * Find objects using filter and navigation settings.
-     *
-     * @param BFilter $filter
-     * @param BNav $navigation
-     * @param int $flags
-     * @return mixed
-     */
 
-    public static function find(BFilter $filter = null, BNav &$navigation = null, $flags = 0){
-
-        $instance = new static();
-
-        if(defined('LOGGER')) Logger::print_debug($filter,false);
-
-        $arFilter = $filter ? $filter->toArray($instance->map,true) : array();
-
-        $arSelect = $instance->map->GetSelectFields();
-
-        $arNav = $navigation ? $navigation->toArray(): false;
-
-        $arSort = $navigation ? $navigation->sortArray($instance->map) : array('ID' => 'DESC');
+    protected function __Load($arFilter,$arSort,$arNav,$arSelect){
 
         $arParams = array(
             'SELECT' => $arSelect
@@ -161,33 +134,12 @@ class BitrixUserORM implements tSerializable{
 
         if($arNav) $arParams['NAV_PARAMS'] = $arNav;
 
-        $resArr = CUser::GetList($arSort,$arSort,$arFilter,$arParams);
+        return CUser::GetList($arSort,$arSort,$arFilter,$arParams);
 
-        $results = array();
-
-        if(defined('LOGGER')) Logger::print_debug($arFilter);
-
-        while($arUser = $resArr->Fetch())
-        {
-            $usr = new static();
-            $usr->fromBitrixData($arUser);
-
-            $results[$usr->id] = $usr;
-        }
-
-        if($navigation){
-            $navigation->total_pages = $resArr->NavPageCount;
-            $navigation->total_records = $resArr->NavRecordCount;
-        }
-
-        return $results;
     }
+
 
     public function delete(){
-
-    }
-
-    public function all(){
 
     }
 
@@ -200,25 +152,14 @@ class BitrixUserORM implements tSerializable{
 
     public function jsonData(){ return $this;}
 
-
-    /**
-     * Initialize object with bitrix data.
-     *
-     * @param $data
-     * @return $this
-     */
-
-
-    public function fromBitrixData($data){
-        $this->map->initialize($this,$data);
-        return $this;
-    }
-
 }
 
 
 
 class BitrixORMMapUser extends BitrixORMMap{
+
+
+    public $type = BitrixORMMapType::USER;
 
     /**
      *
@@ -271,29 +212,28 @@ class BitrixORMMapUser extends BitrixORMMap{
     }
 
 
-    public function GetBitrixUserFieldValue($field,$value,$prefix){
+    public function PrepareFilterElement(BFilterElement $filter){
 
         // some fields behave like ibockelement fields
 
-        if(!in_array($field,$this->filter_fields)){
+        if(!in_array($filter->field,$this->filter_fields)){
 
-            $data = $this->GetBitrixFieldValue($field,$value);
-            return array($prefix.$data->key => $data->value);
+            return parent::PrepareFilterElement($filter->field,$filter->value,$filter->prefix);
 
         }else{
 
 
             // for updated_at and last_login we have to translate to TIMESTAMP_1(_2) and LAST_LOGIN_1(_2) respectively
 
-            if($field === 'updated_at' || $field === 'last_login'){
+            if($filter->field === 'updated_at' || $filter->field === 'last_login'){
 
-                $data = $this->GetBitrixFieldValue($field,$value);
+                $data = $this->GetBitrixFieldValue($filter->field,$filter->value);
 
-                $bname = $this->rules[$field]->bitrixName;
+                $bname = $this->rules[$filter->field]->bitrixName;
 
                 //check if we have 'between'
 
-                if(count($data->value) === 2){
+                if($this->rules[$filter->field]->operator === 'between'){
                      return array(
                          $bname.'_1' => $data->value[0],
                          $bname.'_2' => $data->value[1]
@@ -302,7 +242,7 @@ class BitrixORMMapUser extends BitrixORMMap{
 
                 // if the only one bound is set then define it
 
-                if(strpos($prefix,'<')!==false)
+                if(strpos($filter->prefix,'<')!==false)
                     return array($bname.'_2' => $data->value);
                 else
                     return array($bname.'_1' => $data->value);
@@ -314,13 +254,13 @@ class BitrixORMMapUser extends BitrixORMMap{
 
             // for login we have to replace 'LOGIN' with 'LOGIN_EQUAL' if we don't have any '%' symbols and trim any of them in the end and in the beginning otherwise
 
-            if($field === 'login'){
+            if($filter->field === 'login'){
 
-                if(!is_array($value)) $value = array($value);
+                if(!is_array($filter->value)) $filter->value = array($filter->value);
 
                 $equal = true;
 
-                foreach($value as &$val){
+                foreach($filter->value as &$val){
                     if(strpos($val,'%')!==false){
                         $equal = false;
                         $val = preg_replace('/^%?(.+[^%])%?$/','$1',$val);
@@ -331,8 +271,8 @@ class BitrixORMMapUser extends BitrixORMMap{
 
             }
 
-            if($field === 'id') $bname = 'ID';
-            elseif($field === 'email') $bname = 'EMAIL';
+            if($filter->field === 'id') $bname = 'ID';
+            elseif($filter->field === 'email') $bname = 'EMAIL';
             elseif(!$bname) $bname = 'NAME';
 
 
@@ -341,20 +281,42 @@ class BitrixORMMapUser extends BitrixORMMap{
 
            // if(count($value) === 1) $value = $value[0];
 
-            $value = is_array($value) ? '('.implode(' | ',$value).')' : $value;
+            $filter->value = is_array($filter->value) ? '('.implode(' | ',$filter->value).')' : $filter->value;
 
             // check if we have negation
 
-            if($prefix === '!'){
-               $value = '~'.$value;
+            if($this->rules[$filter->field]->operator === 'not'){
+                $filter->value = '~'.$filter->value;
             }
 
-            return array($bname => $value);
+            return array($bname => $filter->value);
 
 
         }
 
 
+    }
+
+
+    /**
+     * @param BFilterGroup $filter
+     * @return array
+     */
+
+    public function PrepareGroupFilter(BFilterGroup $filter){
+
+        $arr = array();
+
+        foreach($filter->data as $data){
+            $tmp_arr = $data->toArray($this);
+            array_push($arr,current($tmp_arr));
+        }
+
+        $del = ($filter->logic === 'or') ? ' | ' : ' & ';
+        $keys = array_keys($tmp_arr);
+        $arr = array($keys[0] => '('.implode($del,$arr).')');
+
+        return $arr;
     }
 
 }

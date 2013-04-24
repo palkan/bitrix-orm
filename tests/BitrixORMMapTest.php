@@ -1,6 +1,6 @@
 <?php
 /**
- * User: VOVA
+ * User: palkan
  * Date: 19.04.13
  * Time: 12:01
  */
@@ -46,10 +46,10 @@ class BitrixORMMapTest extends PHPUnit_Framework_TestCase
      * @dataProvider providerGetBitrixFieldValue
      */
 
-    public function testGetBitrixFieldValue($key,$val,$exp)
+    public function testGetBitrixFieldValue($key,$val,$prefix,$exp)
     {
 
-        $this->assertEquals($exp,self::$map->GetBitrixFieldValue($key,$val));
+        $this->assertEquals($exp,self::$map->PrepareFilterElement($key,$val,$prefix));
 
     }
 
@@ -57,14 +57,14 @@ class BitrixORMMapTest extends PHPUnit_Framework_TestCase
     public function providerGetBitrixFieldValue()
     {
         return array(
-            array('id', '12', (object)array('key'=>"ID",'value' => 12)),
-            array('created_at', 1356998400, (object)array('key'=>"DATE_CREATE",'value' => "01.01.2013 00:00:00")),
-            array('active', true, (object)array('key'=>'ACTIVE', 'value' => 'Y')),
-            array('description', 'DESC', (object)array('key' => 'DETAIL_TEXT', 'value' => 'DESC')),
-            array('type', 'open', (object)array('key' => 'PROPERTY_TYPE', 'value' => array('ENUM_ID' => 11))),
-            array('is_public', true, (object)array('key' => 'PROPERTY_IS_PUBLIC', 'value' => array('ENUM_ID' => 21))),
-            array('partner_id', array('12',13),(object)array('key' => 'PROPERTY_PARTNER_ID', 'value' => array(12,13))),
-            array('smth','bla-bla',null)
+            array('id', '12', '',array("ID" => 12)),
+            array('created_at', 1356998400, '<',array("<DATE_CREATE" => "01.01.2013 00:00:00")),
+            array('active', true, '',array('ACTIVE' => 'Y')),
+            array('description', 'DESC', '',array('DETAIL_TEXT' => 'DESC')),
+            array('type', 'open', '!',array('!PROPERTY_TYPE' => array('ENUM_ID' => 11))),
+            array('is_public', true, '',array( 'PROPERTY_IS_PUBLIC' => array('ENUM_ID' => 21))),
+            array('partner_id', array('12',13),'',array('PROPERTY_PARTNER_ID' => array(12,13))),
+            array('smth','bla-bla','',null)
         );
     }
 

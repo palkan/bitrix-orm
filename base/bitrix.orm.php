@@ -7,12 +7,13 @@
 
 
 require_once(dirname(__FILE__).'/i.serializable.php');
+require_once(dirname(__FILE__).'/../utils/utils.php');
 
 if(class_exists('CModule')){
     CModule::IncludeModule('iblock');
 }
 
-class BitrixORM implements tSerializable{
+abstract class BitrixORM implements tSerializable{
 
     /**
      * @var BitrixORMMap
@@ -20,109 +21,81 @@ class BitrixORM implements tSerializable{
 
     protected $map;
 
-    //---- Begin: Common fields ----//
-
-    /**
-     * Element ID
-     *
-     * @var int
-     */
-
-    public $id;
-
     /**
      *
-     * Element activity
+     * We use static storage (<i>cache</i>) to prevent from excess loading of objects by id (e.g. when using <i>quiz()</i> function of Question).
      *
-     * @var bool
-     */
-
-    public $active = true;
-
-    /**
+     * You can't load the same object twice using <i>find_by_id()</i> but by using <i>find(filter())</i>.
      *
-     * Date active from (UTC)
+     * However if you loaded object with <i>find()</i> method it is stored in cache too.
      *
-     * @var int
-     */
-
-    public $date_active_from;
-
-    /**
+     * @see find()
+     * @see find_by_id()
      *
-     * Date active to (UTC)
-     *
-     * @var int
-     */
-
-    public $date_active_to;
-
-    /**
-     * @var string
-     */
-
-    public $name;
-
-    /**
-     * Element's 'PREVIEW_TEXT'
-     *
-     * @var string
-     */
-
-    public $preview_text;
-
-    /**
-     *
-     * Elements 'DETAIL_TEXT'
-     *
-     * @var string
-     */
-
-    public $description;
-
-
-    /**
-     * Created by (user id)
-     *
-     * @var int
-     */
-
-    public $created_by;
-
-    /**
-     *
-     * Modified by (user id)
-     *
-     * @var int
-     */
-
-    public $modified_by;
-
-    /**
-     *
-     * Created at ('DATE_CREATE') (UTC)
-     *
-     * @var int
+     * @var array
      *
      */
 
-    public $created_at;
-
-    /**
-     *
-     * Updated at ('TIMESTAMP_X') (UTC)
-     *
-     * @var  int
-     */
-
-    public $updated_at;
+    protected static $__storage = array();
 
 
     //---- End: Common fields ----//
 
-    function __construct(BitrixORMMap $_map){
+    function __construct(BitrixORMMap $_map = null){
         $this->map = $_map;
     }
+
+
+    /**
+     *
+     * Find element by ID.
+     *
+     * Shorthand for <code>reset(find(filter()->by_id($id)))</code>
+     *
+     * @see find
+     *
+     * @param int $id
+     * @return bool|mixed
+     */
+
+    public static function find_by_id($id){
+
+        if(!intval($id)) return false;
+
+        if(static::fromCache($id)) return static::fromCache($id);
+
+        $res = static::find(filter()->by_id($id));
+
+        if(count($res)) return static::cache(reset($res));
+        else return false;
+
+    }
+
+
+    /**
+     * @param BitrixORM $object
+     * @return BitrixORM
+     */
+
+
+    private static function cache(BitrixORM $object){
+        static::$__storage[$object->id] = $object;
+        return $object;
+    }
+
+
+    /**
+     * @param $id
+     * @return bool
+     */
+
+    private static function fromCache($id){
+        return isset(static::$__storage[$id]) ? static::$__storage[$id] : false;
+    }
+
+
+
+    protected function __Load($arFilter,$arSort,$arNav,$arSelect){}
 
 
     /**
@@ -139,27 +112,22 @@ class BitrixORM implements tSerializable{
 
         $arFilter = $filter ? $filter->toArray($instance->map) : array();
 
-        $arFilter['IBLOCK_ID'] = $instance->map->iblock_id;
-
         $arSelect = $instance->map->GetSelectFields();
 
         $arNav = $navigation ? $navigation->toArray(): false;
 
         $arSort = $navigation ? $navigation->sortArray($instance->map) : false;
 
-        $resArr = CIBlockElement::GetList($arSort,$arFilter,false,$arNav,$arSelect);
+        $resArr = $instance->__Load($arFilter,$arSort,$arNav,$arSelect);
 
         $results = array();
-
-
-        if(defined('LOGGER')) Logger::print_debug($arFilter);
 
         while($arElement = $resArr->Fetch())
         {
             $el = new static();
             $el->fromBitrixData($arElement);
 
-            $results[$el->id] = $el;
+            $results[$el->id] = static::cache($el);
         }
 
         if($navigation){
@@ -174,11 +142,6 @@ class BitrixORM implements tSerializable{
     public function delete(){
 
     }
-
-    public function all(){
-
-    }
-
 
     public function save(){
 
@@ -208,16 +171,19 @@ class BitrixORM implements tSerializable{
 
 
 
+class BitrixORMMapType{
+
+    const USER = 'user';
+    const IBLOCK = 'iblock';
+    const CUSTOM = 'custom';
+
+}
+
+
 class BitrixORMMap{
 
-    /**
-     *
-     * Bitrix IBlock ID.
-     *
-     * @var int
-     */
 
-    public $iblock_id = 0;
+    public $type;
 
 
     /**
@@ -250,19 +216,7 @@ class BitrixORMMap{
      * @var array
      */
 
-    public $fields = array(
-        array('bname' => 'ID', 'name' => 'id', 'type' => 'int'),
-        array('bname' => 'NAME', 'name' => 'name', 'type' => 'string'),
-        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => 'bool'),
-        array('bname' => 'DATE_ACTIVE_FROM', 'name' => 'date_active_from', 'type' => 'datetime'),
-        array('bname' => 'DATE_ACTIVE_TO','name' => 'date_active_to', 'type' => 'datetime'),
-        array('bname' => 'PREVIEW_TEXT', 'name' => 'preview_text', 'type' => 'string'),
-        array('bname' => 'DETAIL_TEXT', 'name' => 'description', 'type' => 'string'),
-        array('bname' => 'DATE_CREATE', 'name' => 'created_at', 'type' => 'datetime'),
-        array('bname' => 'CREATED_BY', 'name' => 'created_by', 'type' => 'int'),
-        array('bname' => 'TIMESTAMP_X', 'name' => 'updated_at', 'type' => 'datetime'),
-        array('bname' => 'MODIFIED_BY', 'name' => 'modified_by', 'type' => 'int')
-    );
+    public $fields;
 
 
 
@@ -274,7 +228,7 @@ class BitrixORMMap{
 
         foreach($this->fields as $f){
 
-            $r = new BMapRule($f['bname'], $f['name'], $f['type']);
+            $r = new BMapRule($f['bname'], $f['name'], $f['type'], false, (isset($f['data']) ? $f['data'] : null));
 
             $this->rules[$f['name']] = $r;
 
@@ -285,7 +239,7 @@ class BitrixORMMap{
         if($this->props){
             foreach($this->props as $p){
 
-                $r = new BMapRule($p['bname'], $p['name'], $p['type'], true, (isset($p['scheme']) ? $p['scheme'] : null));
+                $r = new BMapRule($p['bname'], $p['name'], $p['type'], true, (isset($p['data']) ? $p['data'] : null));
 
                 $this->rules[$p['name']] = $r;
 
@@ -361,30 +315,6 @@ class BitrixORMMap{
 
     /**
      *
-     * Return bitrix-style array: <code> array('BITRIX_FIELD_NAME'=>value)</code>
-     *
-     * @param $field   ORM field name
-     * @param $val     value
-     * @return stdClass|null
-     */
-
-    public function GetBitrixFieldValue($field,$val){
-
-        if(!isset($this->rules[$field])) return null;
-
-        $rule = $this->rules[$field];
-
-        $data = new stdClass();
-
-        $data->key = $rule->bitrixName;
-        $data->value = is_null($val) ? false : $rule->fromORM($val);
-
-        return $data;
-
-    }
-
-    /**
-     *
      * Return ORM adopted object containing key and value..
      *
      * @param $bfield  Bitrix field name
@@ -409,6 +339,66 @@ class BitrixORMMap{
 
 
     }
+
+    /**
+     *
+     * Return object containing Bitrix key and prepared value.
+     *
+     * @param $field
+     * @param $value
+     * @return null|stdClass
+     */
+
+
+    public function GetBitrixFieldValue($field,$value){
+
+        if(!isset($this->rules[$field])) return null;
+
+        $rule = $this->rules[$field];
+
+        $data = new stdClass();
+
+        $data->key = $rule->bitrixName;
+        $data->value = is_null($value) ? false : $rule->fromORM($value);
+
+        return $data;
+
+    }
+
+
+
+    /**
+     *
+     * Return bitrix-style array: <code> array('BITRIX_FIELD_NAME'=>value)</code>
+     *
+     * @param BFilterElement
+     * @return array|null
+     */
+
+    public function PrepareFilterElement(BFilterElement $filter){
+
+        if(!($data = $this->GetBitrixFieldValue($filter->field,$filter->value))) return null;
+
+        return array($filter->prefix.$data->key => $data->value);
+
+    }
+
+
+    /**
+     * @param BFilterGroup $filter
+     * @return array
+     */
+
+    public function PrepareGroupFilter(BFilterGroup $filter){
+        $arr = array('LOGIC' => strtoupper($filter->logic));
+
+        foreach($filter->data as $data){
+            array_push($arr,$data->toArray($this));
+        }
+
+        return $arr;
+    }
+
 
 }
 
@@ -435,6 +425,16 @@ class BMapRule{
 
     public $enum_scheme;
 
+
+    /**
+     *
+     * Datetime format
+     * @var  string
+     */
+
+
+    public $fmt;
+
     function __construct($bname, $name, $type, $isProperty = false, $data = null){
 
         $this->bitrixName = $bname;
@@ -443,6 +443,8 @@ class BMapRule{
         $this->isProperty = $isProperty;
 
         if($this->type === 'enum' && $data) $this->enum_scheme = new BEnumScheme($data);
+
+        if($this->type === 'datetime') $this->fmt = is_null($data) ? 'd.m.Y H:i:s' : $data;
 
 
     }
@@ -480,7 +482,7 @@ class BMapRule{
     private function to_string($val){  return html_entity_decode($val,ENT_NOQUOTES,'UTF-8'); }
     private function from_string($val){  return htmlentities($val,ENT_NOQUOTES,'UTF-8'); }
     private function to_datetime($val){  return strtotime($val);   }
-    private function from_datetime($val){  return date('d.m.Y H:i:s',$val);  }
+    private function from_datetime($val){  return date($this->fmt,$val);  }
     private function to_bool($val){  return ($val === "Y");   }
     private function from_bool($val){  return $val ? "Y" : "N";   }
     private function to_object($val){  return unserialize($val);   }
@@ -734,25 +736,27 @@ class BFilter{
      *
      * Generate arFilter array for GetList.
      *
-     * If $user is set to true, then genegate $arFilter for CUser.
+     * If $map->type  is BitrixORMMapType::USER, then generate $arFilter for CUser.
+     *
+     * If $map->type  is BitrixORMMapType::CUSTOM, then array of conditions (strings).
+     *
      *
      * @param BitrixORMMap $map
-     * @param bool $user
      * @return array
      */
 
-    public function toArray(BitrixORMMap $map, $user = false){
+    public function toArray(BitrixORMMap $map){
 
         $filter = array();
 
-        if($this->data->count() === 1) return $this->data->pop()->toArray($map, $user);
+        if($this->data->count() === 1) return $this->data->pop()->toArray($map);
 
         while(!$this->data->isEmpty()){
 
             $el = $this->data->pop();
 
-            if(get_class($el) === 'BFilterGroup' && !$user) array_push($filter,$el->toArray($map,$user));
-            else $filter = array_merge($filter,$el->toArray($map,$user));
+            if(($map->type === BitrixORMMapType::CUSTOM) || (get_class($el) === 'BFilterGroup' && $map->type !== BitrixORMMapType::USER)) array_push($filter,$el->toArray($map));
+            else $filter = array_merge($filter,$el->toArray($map));
         }
 
         return $filter;
@@ -816,7 +820,7 @@ class BFilter{
 
         $matches = array();
 
-        if(preg_match('/^by_((?:[a-z\d]|[a-z\d]_)+)(?:_(between|not|gt(?:e)?|lt(?:e)?))?$/i',$_name,$matches)){
+        if(preg_match('/^by_((?:[a-z\d]|[a-z\d]_)+)(?:_(between|not|like|not_like|gt(?:e)?|lt(?:e)?))?$/i',$_name,$matches)){
 
             $field = $matches[1];
 
@@ -841,14 +845,16 @@ class BFilter{
 
     private function push_between($field,$args){
         if(count($args)!=2) return null;
-        return new BFilterElement($field,$args,'><');
+        return new BFilterElement($field,$args,'><','between');
     }
 
-    private function push_not($field,$args){ return new BFilterElement($field,$args,'!');}
-    private function push_gt($field,$args){ return new BFilterElement($field,$args,'>');}
-    private function push_gte($field,$args){ return new BFilterElement($field,$args,'>=');}
-    private function push_lt($field,$args){ return new BFilterElement($field,$args,'<');}
-    private function push_lte($field,$args){ return new BFilterElement($field,$args,'<=');}
+    private function push_not($field,$args){ return new BFilterElement($field,$args,'!','not');}
+    private function push_like($field,$args){ return new BFilterElement($field,$args,'','like');}
+    private function push_not_like($field,$args){ return new BFilterElement($field,$args,'','not_like');}
+    private function push_gt($field,$args){ return new BFilterElement($field,$args,'>','greater');}
+    private function push_gte($field,$args){ return new BFilterElement($field,$args,'>=','greater_or_equal');}
+    private function push_lt($field,$args){ return new BFilterElement($field,$args,'<','less');}
+    private function push_lte($field,$args){ return new BFilterElement($field,$args,'<=','less_or_equal');}
 
 }
 
@@ -859,30 +865,19 @@ class BFilterElement{
     public $value;
 
     public $prefix;
+    public $operator;
 
-    function __construct($field,$value, $prefix =''){
+    function __construct($field,$value, $prefix ='', $operator = null){
         $this->field = $field;
         $this->value = $value;
         $this->prefix = $prefix;
+        $this->operator = $operator;
     }
 
 
-    public function toArray(BitrixORMMap $map, $user = false){
+    public function toArray(BitrixORMMap $map){
 
-        $result = array();
-
-        if(!$user){
-
-            $data = $map->GetBitrixFieldValue($this->field,$this->value);
-            $result = array($this->prefix.$data->key => $data->value);
-
-        }else{
-
-            $result = $map->GetBitrixUserFieldValue($this->field,$this->value,$this->prefix);
-
-        }
-
-
+        $result = $map->PrepareFilterElement($this);
 
         return $result;
 
@@ -932,32 +927,9 @@ class BFilterGroup{
 
     }
 
-    public function toArray(BitrixORMMap $map, $user = false){
+    public function toArray(BitrixORMMap $map){
 
-        if(!$user){
-
-            $arr = array('LOGIC' => strtoupper($this->logic));
-
-            foreach($this->data as $data){
-                array_push($arr,$data->toArray($map,$user));
-            }
-
-        }else{
-
-            $arr = array();
-
-            foreach($this->data as $data){
-                $tmp_arr = $data->toArray($map,$user);
-                array_push($arr,current($tmp_arr));
-            }
-
-            $del = ($this->logic === 'or') ? ' | ' : ' & ';
-            $keys = array_keys($tmp_arr);
-            $arr = array($keys[0] => '('.implode($del,$arr).')');
-
-        }
-
-        return $arr;
+        return $map->PrepareGroupFilter($this);
 
     }
 
