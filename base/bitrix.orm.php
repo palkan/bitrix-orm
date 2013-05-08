@@ -127,10 +127,13 @@ abstract class BitrixORM implements tSerializable{
             $el = new static();
             $el->fromBitrixData($arElement);
             $el->_created = true;
+            $el->_flush();
 
-            if(static::HAS_ID)
-                $results[$el->id] = static::cache($el);
-            else
+            if(static::HAS_ID){
+                $el->_id = intval($arElement[$el->map->GetBitrixKey('id')]);
+
+                $results[$el->_id] = static::cache($el);
+            }else
                 $results[] = $el;
         }
 
@@ -157,8 +160,14 @@ abstract class BitrixORM implements tSerializable{
      */
 
     public function save(){
-        if($this->_created) return $this->_update();
-        else return $this->_save();
+        $res = false;
+        if($this->_created) $res =  $this->_update();
+        else $res = $this->_save();
+
+        if(!$res) return false;
+
+        $this->_flush();
+        return $this;
     }
 
 
@@ -193,13 +202,32 @@ abstract class BitrixORM implements tSerializable{
     }
 
     protected function _commit($field,$val){
+        $priv_field = '_'.$field;
         if(!is_null($val)){
             $this->_changes[$field] = true;
-            $priv_field = '_'.$field;
             $this->$priv_field = $val;
         }
 
         return $this->$priv_field;
+    }
+
+
+    protected function _flush(){
+        $this->_changes = array();
+    }
+
+
+    //--- MAGIC! ---//
+
+
+    public function __get($name){
+        $_name = '_'.$name;
+        return $this->$_name;
+    }
+
+
+    public function __set($name,$value){
+        return $this->$name($value);
     }
 
 }
@@ -374,11 +402,14 @@ class BitrixORMMap{
         foreach($this->rules as $rule){
 
             $ormName = $rule->ormName;
+            $val = $ormObject->$ormName();
+
+            if(is_null($val)) continue;
 
             if($rule->isProperty)
-                $data->props[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+                $data->props[$rule->bitrixName] = $rule->fromORM($val);
             else
-                $data->fields[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+                $data->fields[$rule->bitrixName] = $rule->fromORM($val);
         }
 
         return $data;

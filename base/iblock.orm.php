@@ -48,7 +48,7 @@ class IBlockORM extends BitrixORM{
 
     function __construct(IBlockORMMap $_map){
         $this->map = $_map;
-        $this->created_at = time();
+        $this->_created_at = time();
     }
 
 
@@ -130,9 +130,9 @@ class IBlockORM extends BitrixORM{
 
     public function delete(){
 
-        if(is_null($this->id)) return false;
+        if(is_null($this->_id)) return false;
 
-        if(!\CIBlockElement::Delete($this->id)){
+        if(!\CIBlockElement::Delete($this->_id)){
             return false;
         }
 
@@ -152,7 +152,9 @@ class IBlockORM extends BitrixORM{
 
             $arFields['PROPERTY_VALUES'] = $data->props;
 
-        if($el->Update($this->id, $arFields)) return $this;
+        if(defined('LOGGER')) Logger::print_debug($arFields);
+
+        if($el->Update($this->_id, $arFields)) return $this;
 
 
         return false;
