@@ -5,9 +5,11 @@
  * Time: 10:48
  */
 
+namespace ru\teachbase;
+
 require_once(dirname(__FILE__).'/test.orm.php');
 
-class BNavTest extends PHPUnit_Framework_TestCase {
+class BNavTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @var BitrixORMMap

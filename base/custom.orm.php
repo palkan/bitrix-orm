@@ -5,6 +5,8 @@
  * Time: 13:51
  */
 
+namespace ru\teachbase;
+
 require_once(dirname(__FILE__).'/bitrix.orm.php');
 
 /**
@@ -16,7 +18,16 @@ require_once(dirname(__FILE__).'/bitrix.orm.php');
 
 class CustomORM extends BitrixORM{
 
-    public $id;
+
+    /**
+     * Array of fields that are unique in the table
+     *
+     * Used while deleting
+     *
+     * @var
+     */
+
+    protected $_unique = array();
 
     /**
      * @var CustomORMMap
@@ -52,54 +63,82 @@ class CustomORM extends BitrixORM{
             }
         }
 
-        Logger::print_debug($sqlQuery);
+        if(defined('LOGGER')) Logger::print_debug($sqlQuery);
 
         return $this->query($sqlQuery);
     }
 
 
-    /**
-     *
-     * @return bool|CDBResult
-     */
 
-
-    public function save(){
-
-        if(!$this->id) return $this->Create();
-
-        return $this->Update();
-    }
-
-
-    private function create(){
+    protected function _save(){
 
         $sqlStr = "insert into ".$this->map->table;
 
-        //TODO: get fields|values
+        $data = $this->map->fields_to_create($this);
 
-        return $this->query($sqlStr);
+        $fields = array_keys($data->fields);
+        $values = array_values($data->fields);
 
+        $sqlStr.=' ('.implode(',',$fields).') values ('.implode(',',$values).')';
+
+        if(!$this->query($sqlStr)) return false;
+
+        return $this;
     }
 
 
-    private function update(){
+    protected function _update(){
 
         $sqlStr = 'update '.$this->map->table.' set ';
 
-        //TODO: get fields|values
+        $data = $this->map->fields_to_update($this);
 
-        return $this->query($sqlStr);
+        $values = array();
+
+        foreach($data->fields as $key => $val){
+            $values[] = $key.' = '.$val;
+        }
+
+        $sqlStr.=implode(',',$values).' '.$this->_where_id();
+
+        if(!$this->query($sqlStr)) return false;
+
+        return $this;
     }
 
 
     public function delete(){
 
-        $sqlStr = 'delete from '.$this->map->table.' where id='.$this->id;
-        return $this->query($sqlStr);
+        $sqlStr = 'delete from '.$this->map->table.' '.$this->_where_id();
+        return !!$this->query($sqlStr);
 
     }
 
+
+
+    protected function _where_id(){
+
+        if(static::HAS_ID) return 'where id = '.$this->_id;
+
+        else{
+
+            $str = 'where ';
+
+            $fields = array();
+
+            foreach($this->_unique as $key){
+
+                $field = '_'.$key;
+
+                $fields[] = $key.' = '.$this->$field;
+
+            }
+
+            $str.=implode(' and ',$fields);
+
+            return $str;
+        }
+    }
 
     /**
      *
@@ -135,6 +174,51 @@ class CustomORMMap extends BitrixORMMap{
     public $table;
 
 
+    /**
+     * @param CustomORM $ormObject
+     * @return UpdateData
+     */
+
+    public function fields_to_update(CustomORM $ormObject){
+
+        $data = new UpdateData();
+
+        foreach($ormObject->changes() as $ormName){
+
+            $rule = $this->rules[$ormName];
+
+            $data->fields[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+
+            if(BitrixORMDataTypes::IsStringType($rule->type)) $data->fields[$rule->bitrixName] ='\''.$data->fields[$rule->bitrixName].'\'';
+
+        }
+
+        return $data;
+    }
+
+
+    /**
+     * @param CustomORM $ormObject
+     * @return UpdateData
+     */
+
+    public function fields_to_create(CustomORM $ormObject){
+
+        $data = new UpdateData();
+
+        foreach($this->rules as $rule){
+
+            $ormName = $rule->ormName;
+
+            $data->fields[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+
+            if(BitrixORMDataTypes::IsStringType($rule->type)) $data->fields[$rule->bitrixName] ='\''.$data->fields[$rule->bitrixName].'\'';
+        }
+
+        return $data;
+    }
+
+
     public function PrepareFilterElement(BFilterElement $filter){
 
         if(!$filter->prefix || empty($filter->prefix)) $filter->prefix = '=';
@@ -152,7 +236,7 @@ class CustomORMMap extends BitrixORMMap{
 
         // add quotes if needed
 
-        if($rule->type === 'string' || $rule->type === 'datetime' || $rule->type === 'bool'){
+        if(BitrixORMDataTypes::IsStringType($rule->type)){
 
             $quotes = function(&$str){ $str = '\''.$str.'\'';};
 

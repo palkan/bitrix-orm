@@ -5,17 +5,24 @@
  * Time: 12:58
  */
 
+namespace ru\teachbase;
+
 require_once(dirname(__FILE__).'/../base/iblock.orm.php');
 require_once(dirname(__FILE__).'/../base/user.orm.php');
 require_once(dirname(__FILE__).'/../base/custom.orm.php');
 
 class Test extends IBlockORM{
 
-    public $partner_id;
+    protected $_partner_id;
 
-    public $is_public;
+    protected $_is_public;
 
-    public $type;
+    protected $_type;
+
+
+    public function partner_id($val = null){return $this->_commit(__FUNCTION__,$val);}
+    public function is_public($val = null){return $this->_commit(__FUNCTION__,$val);}
+    public function type($val = null){return $this->_commit(__FUNCTION__,$val);}
 
 
     function __construct(){
@@ -41,6 +48,10 @@ class TestUser extends BitrixUserORM{
 
 
 class TestUserORMMap extends BitrixORMMapUser{
+
+    public $props = array(
+        array('bname' => 'VK_ID', 'name' => 'vk_id', 'type' => 'int')
+    );
 
 }
 
@@ -77,8 +88,8 @@ class TestORMMap extends IBlockORMMap{
 
 
     public $props = array(
-        array('bname' => 'PROPERTY_PARTNER_ID', 'name' => 'partner_id', 'type' => 'int'),
-        array('bname' => 'PROPERTY_TYPE', 'name' =>'type', 'type' => 'enum', 'data' => array(
+        array('bname' => 'PARTNER_ID', 'name' => 'partner_id', 'type' => 'int'),
+        array('bname' => 'TYPE', 'name' =>'type', 'type' => 'enum', 'data' => array(
             'type' => 'string',
             'list' =>
                 array(
@@ -87,7 +98,7 @@ class TestORMMap extends IBlockORMMap{
                    array('value' => 'undef', 'bvalue' => 'UNDEFINED', 'enum_id' => 13)
                 )
         )),
-        array('bname' => 'PROPERTY_IS_PUBLIC', 'name' => 'is_public', 'type' => 'enum', 'data' => array(
+        array('bname' => 'IS_PUBLIC', 'name' => 'is_public', 'type' => 'enum', 'data' => array(
             'type' => 'bool',
             'list' =>
             array(

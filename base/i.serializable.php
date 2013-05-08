@@ -6,6 +6,7 @@
  */
 
 
+namespace ru\teachbase;
 
 
 

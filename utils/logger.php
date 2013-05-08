@@ -6,6 +6,8 @@
  */
 
 
+namespace ru\teachbase;
+
 define(LOGGER,true);
 
 class Logger {

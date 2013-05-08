@@ -5,15 +5,14 @@
  * Time: 16:35
  */
 
+namespace ru\teachbase;
 
 require_once(dirname(__FILE__).'/i.serializable.php');
 require_once(dirname(__FILE__).'/../utils/utils.php');
 
-if(class_exists('CModule')){
-    CModule::IncludeModule('iblock');
-}
-
 abstract class BitrixORM implements tSerializable{
+
+    const HAS_ID = false;
 
     /**
      * @var BitrixORMMap
@@ -38,8 +37,9 @@ abstract class BitrixORM implements tSerializable{
 
     protected static $__storage = array();
 
+    private $_changes = array();
 
-    //---- End: Common fields ----//
+    protected $_created = false;
 
     function __construct(BitrixORMMap $_map = null){
         $this->map = $_map;
@@ -126,8 +126,12 @@ abstract class BitrixORM implements tSerializable{
         {
             $el = new static();
             $el->fromBitrixData($arElement);
+            $el->_created = true;
 
-            $results[$el->id] = static::cache($el);
+            if(static::HAS_ID)
+                $results[$el->id] = static::cache($el);
+            else
+                $results[] = $el;
         }
 
         if($navigation){
@@ -139,15 +143,33 @@ abstract class BitrixORM implements tSerializable{
     }
 
 
-    public function delete(){
+    /**
+     * @return bool
+     */
 
+    public function delete(){
+      return true;
     }
 
-    public function save(){
 
+    /**
+     * @return $this
+     */
+
+    public function save(){
+        if($this->_created) return $this->_update();
+        else return $this->_save();
+    }
+
+
+    protected function _update(){
         return $this;
     }
 
+
+    protected function _save(){
+        return $this;
+    }
 
     public function jsonData(){ return $this;}
 
@@ -166,6 +188,19 @@ abstract class BitrixORM implements tSerializable{
     }
 
 
+    public function changes(){
+        return array_keys($this->_changes);
+    }
+
+    protected function _commit($field,$val){
+        if(!is_null($val)){
+            $this->_changes[$field] = true;
+            $priv_field = '_'.$field;
+            $this->$priv_field = $val;
+        }
+
+        return $this->$priv_field;
+    }
 
 }
 
@@ -179,6 +214,31 @@ class BitrixORMMapType{
 
 }
 
+
+class BitrixORMDataTypes{
+
+    const INT = 'int';
+    const STRING = 'string';
+    const DATETIME = 'datetime';
+    const BOOL = 'bool';
+    const ENUM = 'enum';
+    const OBJECT = 'object';
+    const JSON = 'json';
+
+
+    public static function IsStringType($type){
+
+        return in_array($type,array(self::STRING,self::DATETIME,self::BOOL));
+
+    }
+
+}
+
+
+//TODO: share maps between instances (singleton maps?);
+
+
+//TODO: default values and function default values (e.g. now());
 
 class BitrixORMMap{
 
@@ -224,6 +284,10 @@ class BitrixORMMap{
     protected $bname2name = array();
 
 
+    protected $prop_prefix = '';
+    protected $prop_suffix = '';
+
+
     function __construct(){
 
         foreach($this->fields as $f){
@@ -254,26 +318,70 @@ class BitrixORMMap{
 
 
     public function GetSelectFields(){
-         return array_keys($this->bname2name);
+         $prefix = $this->prop_prefix;
+         return array_map(function ($rule) use ($prefix){ return $rule->isProperty ? $prefix.$rule->bitrixName : $rule->bitrixName;}, $this->rules);
     }
 
 
 
     public function initialize(BitrixORM &$ormObject, $data){
 
-
         foreach($this->rules as $rule){
 
-            $field = $rule->isProperty ? $rule->bitrixName.'_VALUE' : $rule->bitrixName;
+            $field = $rule->isProperty ? $this->prop_prefix.$rule->bitrixName.$this->prop_suffix : $rule->bitrixName;
 
             if(isset($data[$field])){
                 $ormName = $rule->ormName;
-                $ormObject->$ormName = $rule->toORM($data[$field]);
-
+                $ormObject->$ormName($rule->toORM($data[$field]));
             }
 
         }
 
+    }
+
+    /**
+     * @param BitrixORM $ormObject
+     * @return UpdateData
+     */
+
+    public function fields_to_update(BitrixORM $ormObject){
+
+        $data = new UpdateData();
+
+        foreach($ormObject->changes() as $ormName){
+
+            $rule = $this->rules[$ormName];
+
+            if($rule->isProperty)
+                $data->props[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+            else
+                $data->fields[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+        }
+
+        return $data;
+    }
+
+
+    /**
+     * @param BitrixORM $ormObject
+     * @return UpdateData
+     */
+
+    public function fields_to_create(BitrixORM $ormObject){
+
+        $data = new UpdateData();
+
+        foreach($this->rules as $rule){
+
+            $ormName = $rule->ormName;
+
+            if($rule->isProperty)
+                $data->props[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+            else
+                $data->fields[$rule->bitrixName] = $rule->fromORM($ormObject->$ormName());
+        }
+
+        return $data;
     }
 
 
@@ -290,7 +398,7 @@ class BitrixORMMap{
 
         if(!isset($this->rules[$key])) return null;
 
-        return $this->rules[$key]->bitrixName;
+        return $this->rules[$key]->isProperty ? $this->prop_prefix.$this->rules[$key]->bitrixName : $this->rules[$key]->bitrixName;
 
     }
 
@@ -330,7 +438,7 @@ class BitrixORMMap{
 
         $rule = $this->rules[$field];
 
-        $data = new stdClass();
+        $data = new \stdClass();
 
         $data->key = $rule->ormName;
         $data->value = $rule->toORM($bvalue);
@@ -356,9 +464,9 @@ class BitrixORMMap{
 
         $rule = $this->rules[$field];
 
-        $data = new stdClass();
+        $data = new \stdClass();
 
-        $data->key = $rule->bitrixName;
+        $data->key = $rule->isProperty ? $this->prop_prefix.$rule->bitrixName : $rule->bitrixName;
         $data->value = is_null($value) ? false : $rule->fromORM($value);
 
         return $data;
@@ -403,6 +511,25 @@ class BitrixORMMap{
 }
 
 
+/**
+ *
+ * Contains fields and props translated to "bitrix".
+ *
+ * Use with <i>_update</i> and <i>_create</i>.
+ *
+ * Class UpdateData
+ * @package ru\teachbase
+ */
+
+class UpdateData{
+
+    public $fields = array();
+
+    public $props = array();
+
+}
+
+
 class BMapRule{
 
     public $bitrixName;
@@ -442,9 +569,9 @@ class BMapRule{
         $this->type = $type;
         $this->isProperty = $isProperty;
 
-        if($this->type === 'enum' && $data) $this->enum_scheme = new BEnumScheme($data);
+        if($this->type === BitrixORMDataTypes::ENUM && $data) $this->enum_scheme = new BEnumScheme($data);
 
-        if($this->type === 'datetime') $this->fmt = is_null($data) ? 'd.m.Y H:i:s' : $data;
+        if($this->type === BitrixORMDataTypes::DATETIME) $this->fmt = is_null($data) ? 'd.m.Y H:i:s' : $data;
 
 
     }
@@ -464,7 +591,7 @@ class BMapRule{
         // if type is not 'enum' then we convert each element independently;
         // 'enum' fields as array present only in filter and we have to handle them separately
 
-        if(is_array($val) && $this->type!=='enum'){
+        if(is_array($val) && $this->type!==BitrixORMDataTypes::ENUM){
             $arr = array();
             foreach($val as $v){
                 $arr[] =  call_user_func(array($this, $how.'_'.$this->type),$v);
@@ -487,6 +614,8 @@ class BMapRule{
     private function from_bool($val){  return $val ? "Y" : "N";   }
     private function to_object($val){  return unserialize($val);   }
     private function from_object($val){  return serialize($val);   }
+    private function to_json($val){  return json_decode($val,true);   }
+    private function from_json($val){  return json_encode($val);   }
 
     private function to_enum($val){
         if(!$this->enum_scheme) return null;
@@ -729,7 +858,7 @@ class BFilter{
     private $data;
 
     function __construct(){
-        $this->data = new SplStack();
+        $this->data = new \SplStack();
     }
 
     /**
@@ -755,7 +884,7 @@ class BFilter{
 
             $el = $this->data->pop();
 
-            if(($map->type === BitrixORMMapType::CUSTOM) || (get_class($el) === 'BFilterGroup' && $map->type !== BitrixORMMapType::USER)) array_push($filter,$el->toArray($map));
+            if(($map->type === BitrixORMMapType::CUSTOM) || (get_class($el) === 'ru\\teachbase\\BFilterGroup' && $map->type !== BitrixORMMapType::USER)) array_push($filter,$el->toArray($map));
             else $filter = array_merge($filter,$el->toArray($map));
         }
 
@@ -937,11 +1066,6 @@ class BFilterGroup{
 
 
 //--------- Global functions (helpers) & constants ---------//
-
-
-
-define(B_LOAD_DEPENDENCIES,1);
-
 
 /**
  *

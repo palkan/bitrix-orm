@@ -5,9 +5,12 @@
  * Time: 14:26
  */
 
+namespace ru\teachbase;
+
+
 require_once(dirname(__FILE__).'/test.orm.php');
 
-class BFilterTest extends PHPUnit_Framework_TestCase {
+class BFilterTest extends \PHPUnit_Framework_TestCase {
 
 
     /**

@@ -5,16 +5,17 @@
  * Time: 12:01
  */
 
+namespace ru\teachbase;
+
 require_once(dirname(__FILE__).'/test.orm.php');
 
-class BitrixORMMapTest extends PHPUnit_Framework_TestCase
+class BitrixORMMapTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var BitrixORMMap
      */
 
     protected  static $map;
-
 
     public static function setUpBeforeClass()
     {
@@ -49,7 +50,9 @@ class BitrixORMMapTest extends PHPUnit_Framework_TestCase
     public function testGetBitrixFieldValue($key,$val,$prefix,$exp)
     {
 
-        $this->assertEquals($exp,self::$map->PrepareFilterElement($key,$val,$prefix));
+        $filter = new BFilterElement($key,$val,$prefix);
+
+        $this->assertEquals($exp,self::$map->PrepareFilterElement($filter));
 
     }
 
@@ -89,9 +92,9 @@ class BitrixORMMapTest extends PHPUnit_Framework_TestCase
             array('DATE_CREATE', "01.01.2013 00:00:00", (object)array('key'=>"created_at",'value' => 1356998400)),
             array('ACTIVE', "N", (object)array('key'=>'active', 'value' => false)),
             array('DETAIL_TEXT', 'DESC', (object)array('key' => 'description', 'value' => 'DESC')),
-            array('PROPERTY_TYPE', 'CLOSED', (object)array('key' => 'type', 'value' => 'closed')),
-            array('PROPERTY_IS_PUBLIC', 'N', (object)array('key' => 'is_public', 'value' => false)),
-            array('PROPERTY_PARTNER_ID', array(12,13),(object)array('key' => 'partner_id', 'value' => array(12,13))),
+            array('TYPE', 'CLOSED', (object)array('key' => 'type', 'value' => 'closed')),
+            array('IS_PUBLIC', 'N', (object)array('key' => 'is_public', 'value' => false)),
+            array('PARTNER_ID', array(12,13),(object)array('key' => 'partner_id', 'value' => array(12,13))),
             array('SMTH', 'bla-bla', null)
         );
     }
@@ -101,20 +104,20 @@ class BitrixORMMapTest extends PHPUnit_Framework_TestCase
 
 
         $exp = new Test();
-        $exp->active = true;
-        $exp->id = 1;
-        $exp->created_at = 1356998400;
-        $exp->date_active_from = 1356998400;
-        $exp->date_active_to = 1356998400;
-        $exp->created_by = 1;
-        $exp->modified_by = 1;
-        $exp->description = 'Description';
-        $exp->preview_text = '';
-        $exp->name = 'Test';
-        $exp->updated_at = 1356998400;
-        $exp->type = 'open';
-        $exp->partner_id = 12;
-        $exp->is_public = false;
+        $exp->active(true);
+        $exp->id(1);
+        $exp->created_at(1356998400);
+        $exp->date_active_from(1356998400);
+        $exp->date_active_to(1356998400);
+        $exp->created_by(1);
+        $exp->modified_by(1);
+        $exp->description('Description');
+        $exp->preview_text('');
+        $exp->name('Test');
+        $exp->updated_at(1356998400);
+        $exp->type('open');
+        $exp->partner_id(12);
+        $exp->is_public(false);
 
 
         $data = array('ID' => 1, 'NAME'=>'Test', 'ACTIVE'=>'Y', 'DATE_ACTIVE_FROM'=>"01.01.2013 00:00:00",

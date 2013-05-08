@@ -5,118 +5,91 @@
  * Time: 16:35
  */
 
+namespace ru\teachbase;
 
 require_once(dirname(__FILE__).'/bitrix.orm.php');
 
 class BitrixUserORM extends BitrixORM{
 
+    const HAS_ID = true;
+
+    protected $_id;
+    protected $_active;
+    protected $_last_login;
+    protected $_last_activity;
+    protected $_name;
+    protected $_last_name;
+    protected $_second_name;
+    protected $_email;
+    protected $_modified_by;
+    protected $_registered_at;
+    protected $_updated_at;
+    protected $_phone;
+    protected $_photo;
+
     //---- Begin: Common fields ----//
 
     /**
      * Element ID
+     * @return int
      *
-     * @var int
      */
 
-    public $id;
+    public function id(){return $this->_id;}
 
     /**
-     *
      * Element activity
-     *
-     * @var bool
      */
 
-    public $active = true;
+    public function active($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     /**
-     *
      * Last login date (UTC)
-     *
-     * @var int
      */
 
-    public $last_login;
+    public function last_login($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     /**
-     *
      * Last activity date (UTC)
-     *
-     * @var int
      */
 
-    public $last_activity;
+    public function last_activity($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+    public function name($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+    public function last_name($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+    public function second_name($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+    public function email($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     /**
-     * @var string
-     */
-
-    public $name;
-
-    /**
-     *
-     * @var string
-     */
-
-    public $last_name;
-
-    /**
-     *
-     * @var string
-     */
-
-    public $second_name;
-
-
-    /**
-     *
-     * @var string
-     */
-
-    public $email;
-
-    /**
-     *
      * Modified by (user id)
-     *
-     * @var int
      */
 
-    public $modified_by;
+    public function modified_by($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     /**
-     *
      * Created at ('DATE_REGISTER') (UTC)
-     *
-     * @var int
-     *
      */
 
-    public $registered_at;
+    public function registered_at($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     /**
-     *
      * Updated at ('TIMESTAMP_X') (UTC)
-     *
-     * @var  int
      */
 
-    public $updated_at;
+    public function updated_at($val = null){return $this->_commit(__FUNCTION__,$val);}
 
 
     /**
      * Photo file ID
      *
-     * @var int
      */
 
-    public $photo;
+    public function photo($val = null){return $this->_commit(__FUNCTION__,$val);}
 
-    /**
-     * @var string
-     */
-
-    public $phone;
+    public function phone($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     //---- End: Common fields ----//
 
@@ -134,7 +107,7 @@ class BitrixUserORM extends BitrixORM{
 
         if($arNav) $arParams['NAV_PARAMS'] = $arNav;
 
-        return CUser::GetList($arSort,$arSort,$arFilter,$arParams);
+        return \CUser::GetList($arSort,$arSort,$arFilter,$arParams);
 
     }
 
@@ -144,9 +117,38 @@ class BitrixUserORM extends BitrixORM{
     }
 
 
-    public function save(){
 
-        return $this;
+    protected function _save(){
+
+        $usr = new \CUser();
+
+        $data = $this->map->fields_to_create($this);
+
+        $arFields = array_merge($data->fields,$data->props);
+
+        if(defined('LOGGER')) Logger::print_debug($arFields);
+
+        if($ID = $usr->Add($arFields)){
+            $this->_id = intval($ID);
+            $this->_created = true;
+            return $this;
+        }
+
+        return false;
+    }
+
+
+    protected function _update(){
+
+        $usr = new \CUser();
+
+        $data = $this->map->fields_to_update($this);
+
+        $arFields = array_merge($data->fields,$data->props);
+
+        if($usr->Update($this->id, $arFields)) return $this;
+
+        return false;
     }
 
 
@@ -169,21 +171,23 @@ class BitrixORMMapUser extends BitrixORMMap{
      */
 
     public $fields = array(
-        array('bname' => 'ID', 'name' => 'id', 'type' => 'int'),
-        array('bname' => 'NAME', 'name' => 'name', 'type' => 'string'),
-        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => 'bool'),
-        array('bname' => 'LAST_LOGIN', 'name' => 'last_login', 'type' => 'datetime'),
-        array('bname' => 'LAST_ACTIVITY_DATE','name' => 'last_activity', 'type' => 'datetime'),
-        array('bname' => 'LAST_NAME', 'name' => 'last_name', 'type' => 'string'),
-        array('bname' => 'SECOND_NAME', 'name' => 'second_name', 'type' => 'string'),
-        array('bname' => 'DATE_REGISTER', 'name' => 'registered_at', 'type' => 'datetime'),
-        array('bname' => 'EMAIL', 'name' => 'email', 'type' => 'string'),
-        array('bname' => 'TIMESTAMP_X', 'name' => 'updated_at', 'type' => 'datetime'),
-        array('bname' => 'LOGIN', 'name' => 'login', 'type' => 'string'),
-        array('bname' => 'PERSONAL_PHOTO', 'name' => 'photo', 'type' => 'int'),
-        array('bname' => 'PERSONAL_PHONE', 'name' => 'phone', 'type' => 'string')
+        array('bname' => 'ID', 'name' => 'id', 'type' => BitrixORMDataTypes::INT),
+        array('bname' => 'NAME', 'name' => 'name', 'type' => BitrixORMDataTypes::STRING),
+        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => BitrixORMDataTypes::BOOL),
+        array('bname' => 'LAST_LOGIN', 'name' => 'last_login', 'type' => BitrixORMDataTypes::DATETIME),
+        array('bname' => 'LAST_ACTIVITY_DATE','name' => 'last_activity', 'type' => BitrixORMDataTypes::DATETIME),
+        array('bname' => 'LAST_NAME', 'name' => 'last_name', 'type' => BitrixORMDataTypes::STRING),
+        array('bname' => 'SECOND_NAME', 'name' => 'second_name', 'type' => BitrixORMDataTypes::STRING),
+        array('bname' => 'DATE_REGISTER', 'name' => 'registered_at', 'type' => BitrixORMDataTypes::DATETIME),
+        array('bname' => 'EMAIL', 'name' => 'email', 'type' => BitrixORMDataTypes::STRING),
+        array('bname' => 'TIMESTAMP_X', 'name' => 'updated_at', 'type' => BitrixORMDataTypes::DATETIME),
+        array('bname' => 'LOGIN', 'name' => 'login', 'type' => BitrixORMDataTypes::STRING),
+        array('bname' => 'PERSONAL_PHOTO', 'name' => 'photo', 'type' => BitrixORMDataTypes::INT),
+        array('bname' => 'PERSONAL_PHONE', 'name' => 'phone', 'type' => BitrixORMDataTypes::STRING)
     );
 
+
+    protected $prop_prefix = 'UF_';
 
     private $filter_fields = array(
         'updated_at',
@@ -196,20 +200,6 @@ class BitrixORMMapUser extends BitrixORMMap{
         'id'
     );
 
-    public function initialize(BitrixUserORM &$ormObject, $data){
-
-
-        foreach($this->rules as $rule){
-
-            if(isset($data[$rule->bitrixName])){
-                $ormName = $rule->ormName;
-                $ormObject->$ormName = $rule->toORM($data[$rule->bitrixName]);
-
-            }
-
-        }
-
-    }
 
 
     public function PrepareFilterElement(BFilterElement $filter){
@@ -218,7 +208,7 @@ class BitrixORMMapUser extends BitrixORMMap{
 
         if(!in_array($filter->field,$this->filter_fields)){
 
-            return parent::PrepareFilterElement($filter->field,$filter->value,$filter->prefix);
+            return parent::PrepareFilterElement($filter);
 
         }else{
 
@@ -233,7 +223,7 @@ class BitrixORMMapUser extends BitrixORMMap{
 
                 //check if we have 'between'
 
-                if($this->rules[$filter->field]->operator === 'between'){
+                if($filter->operator === 'between'){
                      return array(
                          $bname.'_1' => $data->value[0],
                          $bname.'_2' => $data->value[1]
@@ -285,7 +275,7 @@ class BitrixORMMapUser extends BitrixORMMap{
 
             // check if we have negation
 
-            if($this->rules[$filter->field]->operator === 'not'){
+            if($filter->operator === 'not'){
                 $filter->value = '~'.$filter->value;
             }
 

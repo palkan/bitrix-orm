@@ -5,9 +5,11 @@
  * Time: 14:26
  */
 
+namespace ru\teachbase;
+
 require_once(dirname(__FILE__).'/test.orm.php');
 
-class BFilterUserTest extends PHPUnit_Framework_TestCase {
+class BFilterUserTest extends \PHPUnit_Framework_TestCase {
 
 
     /**
@@ -32,6 +34,18 @@ class BFilterUserTest extends PHPUnit_Framework_TestCase {
         );
 
         $arr = filter()->by_id(1,2)->by_name('%vasya')->toArray(self::$map);
+
+        $this->assertEquals($exp,$arr);
+    }
+
+
+    public function testSimplePropFilter(){
+        $exp = array(
+            'UF_VK_ID' => '1',
+            'NAME' => '%vasya'
+        );
+
+        $arr = filter()->by_vk_id(1)->by_name('%vasya')->toArray(self::$map);
 
         $this->assertEquals($exp,$arr);
     }
