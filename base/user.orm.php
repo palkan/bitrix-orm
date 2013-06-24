@@ -11,10 +11,9 @@ require_once(dirname(__FILE__).'/bitrix.orm.php');
 
 class BitrixUserORM extends BitrixORM{
 
-    const HAS_ID = true;
-
     protected $_id;
     protected $_active;
+    protected $_login;
     protected $_last_login;
     protected $_last_activity;
     protected $_name;
@@ -42,6 +41,8 @@ class BitrixUserORM extends BitrixORM{
      */
 
     public function active($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+    public function login($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     /**
      * Last login date (UTC)
@@ -114,17 +115,34 @@ class BitrixUserORM extends BitrixORM{
 
     public function delete(){
 
+        if(is_null($this->_id)) return false;
+
+        if(!\CUser::Delete($this->_id)){
+            return false;
+        }
+
+        return true;
+
     }
 
 
+    public static function delete_by_id($id){
 
-    protected function _save(){
+        if(!\CIBlockElement::Delete($id)){
+            return false;
+        }
+
+        return true;
+    }
+
+
+    protected function _create(){
 
         $usr = new \CUser();
 
         $data = $this->map->fields_to_create($this);
 
-        $arFields = array_merge($data->fields,$data->props);
+        $arFields = array_merge($data->fields,$this->prefix_props($data->props));
 
         if(defined('LOGGER')) Logger::print_debug($arFields);
 
@@ -144,15 +162,29 @@ class BitrixUserORM extends BitrixORM{
 
         $data = $this->map->fields_to_update($this);
 
-        $arFields = array_merge($data->fields,$data->props);
+        $arFields = array_merge($data->fields,$this->prefix_props($data->props));
 
-        if($usr->Update($this->id, $arFields)) return $this;
+
+        if(defined('LOGGER')) Logger::print_debug($arFields);
+
+        if($usr->Update($this->_id, $arFields)) return $this;
 
         return false;
     }
 
 
-    public function jsonData(){ return $this;}
+    private function prefix_props($props){
+
+        $pr_props = array();
+
+        foreach($props as $key => $val){
+            $pr_props['UF_'.$key] = $val;
+        }
+
+        return $pr_props;
+
+    }
+
 
 }
 
@@ -162,6 +194,8 @@ class BitrixORMMapUser extends BitrixORMMap{
 
 
     public $type = BitrixORMMapType::USER;
+
+    public $has_id = true;
 
     /**
      *

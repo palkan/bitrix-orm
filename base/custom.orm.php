@@ -20,16 +20,6 @@ class CustomORM extends BitrixORM{
 
 
     /**
-     * Array of fields that are unique in the table
-     *
-     * Used while deleting
-     *
-     * @var
-     */
-
-    protected $_unique = array();
-
-    /**
      * @var CustomORMMap
      */
 
@@ -70,7 +60,7 @@ class CustomORM extends BitrixORM{
 
 
 
-    protected function _save(){
+    protected function _create(){
 
         $sqlStr = "insert into ".$this->map->table;
 
@@ -118,7 +108,7 @@ class CustomORM extends BitrixORM{
 
     protected function _where_id(){
 
-        if(static::HAS_ID) return 'where id = '.$this->_id;
+        if($this->map->has_id) return 'where id = '.$this->_id;
 
         else{
 
@@ -126,7 +116,7 @@ class CustomORM extends BitrixORM{
 
             $fields = array();
 
-            foreach($this->_unique as $key){
+            foreach($this->map->unique as $key){
 
                 $field = '_'.$key;
 
@@ -172,6 +162,16 @@ class CustomORMMap extends BitrixORMMap{
      */
 
     public $table;
+
+    /**
+     * Array of fields that are unique in the table
+     *
+     * Used while deleting
+     *
+     * @var
+     */
+
+    public $unique = array();
 
 
     /**

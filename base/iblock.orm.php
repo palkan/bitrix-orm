@@ -15,9 +15,6 @@ if(class_exists('CModule')){
 }
 
 class IBlockORM extends BitrixORM{
-
-    const HAS_ID = true;
-
     //---- Begin: Common fields ----//
 
 
@@ -140,6 +137,15 @@ class IBlockORM extends BitrixORM{
     }
 
 
+    public static function delete_by_id($id){
+        if(!\CIBlockElement::Delete($id)){
+            return false;
+        }
+
+        return true;
+    }
+
+
     protected function _update(){
 
         $el = new \CIBlockElement();
@@ -161,7 +167,7 @@ class IBlockORM extends BitrixORM{
     }
 
 
-    protected function _save(){
+    protected function _create(){
 
         $el = new \CIBlockElement();
 
@@ -183,8 +189,6 @@ class IBlockORM extends BitrixORM{
     }
 
 
-    public function jsonData(){ return $this;}
-
     public function changes(){
 
         $all_props = array_map(function($p){ return $p['name'];}, $this->map->props);
@@ -205,6 +209,8 @@ class IBlockORMMap extends BitrixORMMap{
 
     public $type = BitrixORMMapType::IBLOCK;
 
+    public $has_id = true;
+
     /**
      *
      * Bitrix IBlock ID.
@@ -213,8 +219,6 @@ class IBlockORMMap extends BitrixORMMap{
      */
 
     public $iblock_id = 0;
-
-    public $assign_code = 'NULL';
 
     protected $prop_prefix = 'PROPERTY_';
     protected $prop_suffix = '_VALUE';

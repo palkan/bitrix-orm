@@ -75,23 +75,23 @@ class Utils
         $version = "0.0.0";
         $short = '';
 
-        if (eregi('MSIE', $visitor_user_agent) && !eregi('Opera', $visitor_user_agent)) {
+        if (preg_match('MSIE', $visitor_user_agent) && !preg_match('Opera', $visitor_user_agent)) {
             $bname = 'Internet Explorer';
             $ub = "MSIE";
             $short = 'IE';
-        } elseif (eregi('Firefox', $visitor_user_agent)) {
+        } elseif (preg_match('Firefox', $visitor_user_agent)) {
             $bname = 'Mozilla Firefox';
             $ub = "Firefox";
             $short = 'FF';
-        } elseif (eregi('Chrome', $visitor_user_agent)) {
+        } elseif (preg_match('Chrome', $visitor_user_agent)) {
             $bname = 'Google Chrome';
             $ub = "Chrome";
             $short = 'Chrome';
-        } elseif (eregi('Safari', $visitor_user_agent)) {
+        } elseif (preg_match('Safari', $visitor_user_agent)) {
             $bname = 'Apple Safari';
             $ub = "Safari";
             $short = 'Safari';
-        } elseif (eregi('Opera', $visitor_user_agent)) {
+        } elseif (preg_match('Opera', $visitor_user_agent)) {
             $bname = 'Opera';
             $ub = "Opera";
             $short = 'Opera';
@@ -168,7 +168,7 @@ class Utils
                     (Ask Jeeves/Teoma)|(Java/1.6.0_04)'
         );
         foreach ($oses as $os => $pattern) {
-            if (eregi($pattern, $visitor_user_agent)) {
+            if (preg_match($pattern, $visitor_user_agent)) {
                 return $os;
             }
         }
@@ -248,5 +248,21 @@ function session($path, $val = null)
 
     }
 
+
+}
+
+
+/**
+ * @param array $array
+ * @param string $field
+ * @return array
+ */
+
+
+function make_assoc($array,$field){
+
+    $keys = array_map(function($obj) use ($field){ return $obj->$field;}, $array);
+
+    return array_combine($keys,array_values($array));
 
 }

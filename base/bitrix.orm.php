@@ -12,8 +12,6 @@ require_once(dirname(__FILE__).'/../utils/utils.php');
 
 abstract class BitrixORM implements tSerializable{
 
-    const HAS_ID = false;
-
     /**
      * @var BitrixORMMap
      */
@@ -129,7 +127,7 @@ abstract class BitrixORM implements tSerializable{
             $el->_created = true;
             $el->_flush();
 
-            if(static::HAS_ID){
+            if($instance->map->has_id){
                 $el->_id = intval($arElement[$el->map->GetBitrixKey('id')]);
 
                 $results[$el->_id] = static::cache($el);
@@ -143,6 +141,15 @@ abstract class BitrixORM implements tSerializable{
         }
 
         return $results;
+    }
+
+    /**
+     * Return all elements
+     * @return mixed
+     */
+
+    public static function all(){
+        return static::find();
     }
 
 
@@ -162,11 +169,12 @@ abstract class BitrixORM implements tSerializable{
     public function save(){
         $res = false;
         if($this->_created) $res =  $this->_update();
-        else $res = $this->_save();
+        else $res = $this->_create();
 
         if(!$res) return false;
 
         $this->_flush();
+        $this->_created = true;
         return $this;
     }
 
@@ -176,11 +184,13 @@ abstract class BitrixORM implements tSerializable{
     }
 
 
-    protected function _save(){
+    protected function _create(){
         return $this;
     }
 
-    public function jsonData(){ return $this;}
+    public function jsonData(){
+        return $this->map->jsonObject($this);
+    }
 
 
     /**
@@ -219,9 +229,9 @@ abstract class BitrixORM implements tSerializable{
 
     //--- MAGIC! ---//
 
-
+ /*
     public function __get($name){
-        $_name = '_'.$name;
+        $_name = $name;
         return $this->$_name;
     }
 
@@ -229,6 +239,7 @@ abstract class BitrixORM implements tSerializable{
     public function __set($name,$value){
         return $this->$name($value);
     }
+   */
 
 }
 
@@ -272,6 +283,8 @@ class BitrixORMMap{
 
 
     public $type;
+
+    public $has_id = false;
 
 
     /**
@@ -538,6 +551,28 @@ class BitrixORMMap{
         return $arr;
     }
 
+    /**
+     *
+     * Generate object containing all fields of ORM object (for printing or to_json)
+     *
+     * @param BitrixORM $target
+     * @return \stdClass
+     */
+
+    public function jsonObject(BitrixORM $target){
+
+        $return = new \stdClass();
+
+        foreach($this->rules as $rule){
+
+            $field = $rule->ormName;
+
+            $return->$field = $target->$field();
+        }
+
+        return $return;
+
+    }
 
 }
 
