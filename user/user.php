@@ -17,6 +17,10 @@ class User extends BitrixUserORM{
 
     protected $_show_hints = true;
 
+    protected $_notifications = 0;
+
+    protected $_notifications_sms = 0;
+
     private $_photo_path;
 
     function __construct(){
@@ -34,6 +38,30 @@ class User extends BitrixUserORM{
      */
 
     public function hints($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+    /**
+     *
+     * Bitmask for E-mail notifications to send. If notification's bit is set then we don't send this notification to the User.
+     *
+     * TODO: Is it really bad idea to filter users on php side rather then on sql side (using multiple fields)?
+     *
+     * @param null $val
+     * @return mixed
+     */
+
+    public function notifications($val = null){return $this->_commit(__FUNCTION__,$val);}
+
+
+    /**
+     *
+     * Bitmask for SMS notifications to send. If notification's bit is set then we don't send this notification to the User.
+     *
+     *
+     * @param null $val
+     * @return mixed
+     */
+
+    public function notifications_sms($val = null){return $this->_commit(__FUNCTION__,$val);}
 
 
     /**

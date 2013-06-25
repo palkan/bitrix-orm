@@ -17,7 +17,7 @@ class MeetingMap extends AssignableMap{
 
     public $props = array(
         array('bname' => 'PARTNER', 'name' => 'partner_id', 'type' => BitrixORMDataTypes::INT),
-        array('bname' => 'DURATION', 'name' => 'duration', 'type' => BitrixORMDataTypes::INT),
+        array('bname' => 'TOTAL_DURATION', 'name' => 'duration', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'USERS_NUM', 'name' => 'users_num', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'GUESTS_NUM', 'name' => 'guests_num', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'TYPE', 'name' =>'type', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
