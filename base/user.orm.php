@@ -282,7 +282,7 @@ class BitrixORMMapUser extends BitrixORMMap{
 
                 if(!is_array($filter->value)) $filter->value = array($filter->value);
 
-                $equal = true;
+                $equal = true && ($filter->operator != 'like');
 
                 foreach($filter->value as &$val){
                     if(strpos($val,'%')!==false){
