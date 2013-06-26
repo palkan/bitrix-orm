@@ -66,6 +66,14 @@ class NotifyManager {
 
         if(!$user || (($user->notifications() & $notification->code)>0)) return;
 
+        if(!$user->last_login()){
+            $check_word = substr(md5($user->password_hash().$user->last_login()),0,8);
+            $user->set_checkword($check_word);
+            $extra_link = "?change_password=yes&lang=ru&USER_CHECKWORD=".$check_word."&checkid=".$user->id();
+
+            $notification->body = preg_replace('/(http(:?s)?:\/\/[a-z\d\/\.]+\/)/','$1'.$extra_link,$notification->body);
+        }
+
         $arEventFields = array(
             "USER_EMAIL"  => $user->email(),
             "THEME" => $notification->theme,

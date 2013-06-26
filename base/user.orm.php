@@ -26,6 +26,12 @@ class BitrixUserORM extends BitrixORM{
     protected $_phone;
     protected $_photo;
 
+
+    /** private security data  */
+
+    private $_password_hash;
+    private $_check_word;
+
     //---- Begin: Common fields ----//
 
     /**
@@ -92,12 +98,33 @@ class BitrixUserORM extends BitrixORM{
 
     public function phone($val = null){return $this->_commit(__FUNCTION__,$val);}
 
+
+    /**
+     * Return password hash.
+     *
+     * @return mixed
+     */
+
+    public function password_hash(){ return $this->_password_hash;}
+
     //---- End: Common fields ----//
 
     function __construct(BitrixORMMapUser $_map){
         $this->map = $_map;
     }
 
+
+    /**
+     * Update user's checkword
+     *
+     * @param $check_word
+     * @param bool $immediate If true then update user now else update on explicit <i>save()</i>
+     */
+
+    public function set_checkword($check_word, $immediate = true){
+        $u = new \CUser();
+        $u->Update($this->_id, array("CHECKWORD" => $check_word));
+    }
 
 
     protected function __Load($arFilter,$arSort,$arNav,$arSelect){
@@ -185,6 +212,16 @@ class BitrixUserORM extends BitrixORM{
 
     }
 
+
+
+    public function fromBitrixData($data){
+        parent::fromBitrixData($data);
+
+        $this->_password_hash = $data['PASSWORD'];
+
+        $this->_check_word = $data['CHECKWORD'];
+
+    }
 
 }
 
