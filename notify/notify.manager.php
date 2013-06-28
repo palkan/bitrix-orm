@@ -71,14 +71,17 @@ class NotifyManager {
             $user->set_checkword($check_word);
             $extra_link = "?change_password=yes&lang=ru&USER_CHECKWORD=".$check_word."&checkid=".$user->id();
 
-            $notification->body = preg_replace('/(http(:?s)?:\/\/[a-z\d\/\.]+\/)/','$1'.$extra_link,$notification->body);
+            $body = preg_replace('/(http(:?s)?:\/\/[a-z\d\/\.]+\/)/','$1'.$extra_link,$notification->body);
+
+        }else{
+            $body = $notification->body;
         }
 
         $arEventFields = array(
             "USER_EMAIL"  => $user->email(),
             "THEME" => $notification->theme,
             "NAME" => $user->full_name(),
-            "BODY" => $notification->body
+            "BODY" => $body
         );
 
         \CEvent::Send(self::EVENT, SITE_ID, $arEventFields);
