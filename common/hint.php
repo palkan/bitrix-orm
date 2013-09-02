@@ -38,6 +38,8 @@ class Hint extends IBlockORM{
     }
 
     function __construct(){
-        parent::__construct(new HintMap());
+        parent::__construct();
     }
 }
+
+BitrixORM::registerMapClass(new HintMap(),Hint::className());

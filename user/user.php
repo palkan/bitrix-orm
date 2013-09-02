@@ -24,7 +24,7 @@ class User extends BitrixUserORM{
     private $_photo_path;
 
     function __construct(){
-        parent::__construct(new UserMap());
+        parent::__construct();
     }
 
     /**
@@ -127,6 +127,9 @@ class User extends BitrixUserORM{
     }
 
 }
+
+
+BitrixORM::registerMapClass(new UserMap(),User::className());
 
 
 class UserRoles{

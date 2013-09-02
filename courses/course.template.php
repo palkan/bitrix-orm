@@ -1,15 +1,15 @@
 <?php
 /**
- * User: VOVA
- * Date: 22.04.13
- * Time: 15:42
+ * User: palkan
+ * Date: 02.09.13
+ * Time: 10:42
  */
 
 namespace ru\teachbase;
 
-require(dirname(__FILE__) . '/../maps/quiz.template.map.php');
+require(dirname(__FILE__) . '/../maps/course.template.map.php');
 
-class QuizTemplate extends IBlockORM{
+class CourseTemplate extends IBlockORM{
 
     protected $_is_public;
 
@@ -32,4 +32,4 @@ class QuizTemplate extends IBlockORM{
     }
 }
 
-BitrixORM::registerMapClass(new QuizTemplateMap(),QuizTemplate::className());
+BitrixORM::registerMapClass(new HintMap(),Hint::className());

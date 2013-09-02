@@ -89,7 +89,7 @@ class Question extends IBlockORM{
 
 
     function __construct(){
-        parent::__construct(new QuestionMap());
+       parent::__construct();
     }
 
 
@@ -107,6 +107,9 @@ class Question extends IBlockORM{
     }
 
 }
+
+
+BitrixORM::registerMapClass(new QuestionMap(),Question::className());
 
 /**
  *

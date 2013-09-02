@@ -28,7 +28,7 @@ class Meeting extends Assignable{
     public function guests_num($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     function __construct(){
-        parent::__construct(new MeetingMap());
+        parent::__construct();
     }
 }
 
@@ -46,3 +46,5 @@ class MeetingTypes{
     const PRIV = 'private';
 
 }
+
+BitrixORM::registerMapClass(new MeetingMap(),Meeting::className());

@@ -7,17 +7,19 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../base/iblock.orm.php');
+require_once(dirname(__FILE__).'/../assign/assignable.php');
 
-class QuizTemplateMap extends IBlockORMMap{
+class CourseTemplateMap extends AssignableMap{
 
     public $iblock_id = 31;
 
+    public $assign_code = 'COURSE';
+
     public $props = array(
         array('bname' => 'PARTNER', 'name' => 'partner_id', 'type' => BitrixORMDataTypes::INT),
-        array('bname' => 'MAX_SCORE', 'name' => 'max_score', 'type' => BitrixORMDataTypes::INT),
-        array('bname' => 'QUES_NUM', 'name' => 'ques_num', 'type' => BitrixORMDataTypes::INT),
-        array('bname' => 'IS_SURVEY', 'name' =>'is_survey', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
+        array('bname' => 'COVER_IMG', 'name' => 'cover_img', 'type' => BitrixORMDataTypes::FILE),
+        array('bname' => 'PAGES_NUM', 'name' => 'pages_num', 'type' => BitrixORMDataTypes::INT),
+        array('bname' => 'EDITABLE', 'name' =>'editable', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
             'type' => BitrixORMDataTypes::BOOL,
             'list' =>
                 array(

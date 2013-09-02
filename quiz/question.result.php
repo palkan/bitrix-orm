@@ -88,7 +88,9 @@ class QuestionResult extends CustomORM{
 
 
     function __construct(){
-        parent::__construct(new QuestionResultMap());
+        parent::__construct();
     }
 
 }
+
+BitrixORM::registerMapClass(new QuestionResultMap(), QuestionResult::className());

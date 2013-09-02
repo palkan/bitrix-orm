@@ -77,7 +77,7 @@ class Partner extends Assignable{
 
 
     function __construct(){
-        parent::__construct(new PartnerMap());
+        parent::__construct();
     }
 
 
@@ -105,3 +105,6 @@ class Partner extends Assignable{
 
 
 }
+
+
+BitrixORM::registerMapClass(new PartnerMap(),Partner::className());

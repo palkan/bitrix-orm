@@ -8,6 +8,7 @@
 
 namespace ru\teachbase;
 require_once(dirname(__FILE__) . '/../base/custom.orm.php');
+require_once(dirname(__FILE__) . '/../maps/assign.relation.map.php');
 
 /**
  *
@@ -82,9 +83,9 @@ class Relation extends CustomORM{
     public function role($val = null){return $this->_commit(__FUNCTION__,$val);}
 
     function __construct(){
-
-        parent::__construct(new AssignRelationMap());
-
+       parent::__construct();
     }
 
 }
+
+BitrixORM::registerMapClass(new AssignRelationMap(),Relation::className());
