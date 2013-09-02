@@ -11,6 +11,8 @@ require_once(dirname(__FILE__).'/bitrix.orm.php');
 
 class BitrixUserORM extends BitrixORM{
 
+
+
     protected $_id;
     protected $_active;
     protected $_login;
@@ -109,8 +111,8 @@ class BitrixUserORM extends BitrixORM{
 
     //---- End: Common fields ----//
 
-    function __construct(BitrixORMMapUser $_map){
-        $this->map = $_map;
+    function __construct(){
+        parent::__construct();
     }
 
 
@@ -167,7 +169,7 @@ class BitrixUserORM extends BitrixORM{
 
         $usr = new \CUser();
 
-        $data = $this->map->fields_to_create($this);
+        $data = $this->mapref->fields_to_create($this);
 
         $arFields = array_merge($data->fields,$this->prefix_props($data->props));
 
@@ -187,7 +189,7 @@ class BitrixUserORM extends BitrixORM{
 
         $usr = new \CUser();
 
-        $data = $this->map->fields_to_update($this);
+        $data = $this->mapref->fields_to_update($this);
 
         $arFields = array_merge($data->fields,$this->prefix_props($data->props));
 
@@ -381,3 +383,5 @@ class BitrixORMMapUser extends BitrixORMMap{
     }
 
 }
+
+BitrixORM::registerMapClass(new BitrixORMMapUser(), BitrixUserORM::className());

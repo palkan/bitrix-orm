@@ -17,7 +17,6 @@ if(class_exists('CModule')){
 class IBlockORM extends BitrixORM{
     //---- Begin: Common fields ----//
 
-
     protected $_id;
 
     protected $_active = true;
@@ -43,8 +42,8 @@ class IBlockORM extends BitrixORM{
 
     //---- End: Common fields ----//
 
-    function __construct(IBlockORMMap $_map){
-        $this->map = $_map;
+    function __construct(){
+        parent::__construct();
         $this->_created_at = time();
     }
 
@@ -118,7 +117,7 @@ class IBlockORM extends BitrixORM{
 
     protected function __Load($arFilter,$arSort,$arNav,$arSelect){
 
-        $arFilter['IBLOCK_ID'] = $this->map->iblock_id;
+        $arFilter['IBLOCK_ID'] = $this->mapref->iblock_id;
 
         return \CIBlockElement::GetList($arSort,$arFilter,false,$arNav,$arSelect);
 
@@ -150,7 +149,7 @@ class IBlockORM extends BitrixORM{
 
         $el = new \CIBlockElement();
 
-        $data = $this->map->fields_to_update($this);
+        $data = $this->mapref->fields_to_update($this);
 
         $arFields = $data->fields;
 
@@ -171,10 +170,10 @@ class IBlockORM extends BitrixORM{
 
         $el = new \CIBlockElement();
 
-        $data = $this->map->fields_to_create($this);
+        $data = $this->mapref->fields_to_create($this);
 
         $arFields = $data->fields;
-        $arFields['IBLOCK_ID'] = $this->map->iblock_id;
+        $arFields['IBLOCK_ID'] = $this->mapref->iblock_id;
         $arFields['PROPERTY_VALUES'] = $data->props;
 
         if(defined('LOGGER')) Logger::print_debug($arFields);
@@ -191,7 +190,7 @@ class IBlockORM extends BitrixORM{
 
     public function changes(){
 
-        $all_props = array_map(function($p){ return $p['name'];}, $this->map->props);
+        $all_props = array_map(function($p){ return $p['name'];}, $this->mapref->props);
 
         $changes = parent::changes();
 
@@ -238,3 +237,6 @@ class IBlockORMMap extends BitrixORMMap{
     );
 
 }
+
+
+BitrixORM::registerMapClass(new IBlockOrmMap(), IBlockORM::className());

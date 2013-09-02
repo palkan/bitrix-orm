@@ -27,12 +27,14 @@ class Test extends IBlockORM{
 
     function __construct(){
 
-        parent::__construct(new TestORMMap());
+        parent::__construct();
 
     }
 
 
 }
+
+
 
 
 
@@ -40,11 +42,12 @@ class TestUser extends BitrixUserORM{
 
 
     function __construct(){
-        parent::__construct(new TestUserORMMap());
+        parent::__construct();
     }
 
 
 }
+
 
 
 class TestUserORMMap extends BitrixORMMapUser{
@@ -60,7 +63,7 @@ class TestCustom extends CustomORM{
 
 
     function __construct(){
-        parent::__construct(new CustomORMMap());
+        parent::__construct();
     }
 
 
@@ -110,3 +113,7 @@ class TestORMMap extends IBlockORMMap{
 
 
 }
+
+BitrixORM::registerMapClass(new TestORMMap(),Test::className());
+BitrixORM::registerMapClass(new TestCustomORMMap(),TestCustom::className());
+BitrixORM::registerMapClass(new TestUserORMMap(),TestUser::className());

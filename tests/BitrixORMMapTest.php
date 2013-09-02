@@ -43,6 +43,7 @@ class BitrixORMMapTest extends \PHPUnit_Framework_TestCase
 
     }
 
+
     /**
      * @dataProvider providerGetBitrixFieldValue
      */
@@ -98,6 +99,9 @@ class BitrixORMMapTest extends \PHPUnit_Framework_TestCase
             array('SMTH', 'bla-bla', null)
         );
     }
+
+    /**
+     */
 
 
     public function testFromBitrixData(){

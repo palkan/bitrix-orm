@@ -12,11 +12,18 @@ require_once(dirname(__FILE__).'/../utils/utils.php');
 
 abstract class BitrixORM implements tSerializable{
 
+
+    private static $maps = array();
+
+
     /**
-     * @var BitrixORMMap
+     *
+     * Reference to the shared map within instance.
+     *
+     * @var
      */
 
-    protected $map;
+    public $mapref;
 
     /**
      *
@@ -39,8 +46,33 @@ abstract class BitrixORM implements tSerializable{
 
     protected $_created = false;
 
-    function __construct(BitrixORMMap $_map = null){
-        $this->map = $_map;
+    function __construct(){
+
+        $this->mapref = self::$maps[get_class($this)];
+
+    }
+
+
+    /**
+     * @param $map
+     * @param $classname
+     * @throws \Exception
+     */
+
+    public static function registerMapClass(BitrixORMMap $map, $classname){
+
+        if(isset(self::$maps[$classname])) throw new \Exception('Class has been already registered: '.$classname);
+
+        self::$maps[$classname] = $map;
+
+    }
+
+    /**
+     * @return string
+     */
+
+    public static function className(){
+        return get_called_class();
     }
 
 
@@ -108,13 +140,13 @@ abstract class BitrixORM implements tSerializable{
 
         $instance = new static();
 
-        $arFilter = $filter ? $filter->toArray($instance->map) : array();
+        $arFilter = $filter ? $filter->toArray($instance->mapref) : array();
 
-        $arSelect = $instance->map->GetSelectFields();
+        $arSelect = $instance->mapref->GetSelectFields();
 
         $arNav = $navigation ? $navigation->toArray(): false;
 
-        $arSort = $navigation ? $navigation->sortArray($instance->map) : false;
+        $arSort = $navigation ? $navigation->sortArray($instance->mapref) : false;
 
         $resArr = $instance->__Load($arFilter,$arSort,$arNav,$arSelect);
 
@@ -122,13 +154,15 @@ abstract class BitrixORM implements tSerializable{
 
         while($arElement = $resArr->Fetch())
         {
+           // Logger::print_debug($arElement);
+
             $el = new static();
             $el->fromBitrixData($arElement);
             $el->_created = true;
             $el->_flush();
 
-            if($instance->map->has_id){
-                $el->_id = intval($arElement[$el->map->GetBitrixKey('id')]);
+            if($instance->mapref->has_id){
+                $el->_id = intval($arElement[$instance->mapref->GetBitrixKey('id')]);
 
                 $results[$el->_id] = static::cache($el);
             }else
@@ -189,7 +223,7 @@ abstract class BitrixORM implements tSerializable{
     }
 
     public function jsonData(){
-        return $this->map->jsonObject($this);
+        return $this->mapref->jsonObject($this);
     }
 
 
@@ -202,7 +236,7 @@ abstract class BitrixORM implements tSerializable{
 
 
     public function fromBitrixData($data){
-        $this->map->initialize($this,$data);
+        $this->mapref->initialize($this,$data);
         return $this;
     }
 
@@ -263,6 +297,7 @@ class BitrixORMDataTypes{
     const ENUM = 'enum';
     const OBJECT = 'object';
     const JSON = 'json';
+    const FILE = 'file';
 
 
     public static function IsStringType($type){
@@ -272,10 +307,6 @@ class BitrixORMDataTypes{
     }
 
 }
-
-
-//TODO: share maps between instances (singleton maps?);
-
 
 //TODO: default values and function default values (e.g. now());
 
@@ -469,9 +500,9 @@ class BitrixORMMap{
      *
      * Return ORM adopted object containing key and value..
      *
-     * @param $bfield  Bitrix field name
-     * @param $bvalue
-     * @return null|stdClass
+     * @param $bfield string Bitrix field name
+     * @param $bvalue mixed
+     * @return null|\stdClass
      */
 
     public function GetORMFieldValue($bfield,$bvalue){
@@ -498,7 +529,7 @@ class BitrixORMMap{
      *
      * @param $field
      * @param $value
-     * @return null|stdClass
+     * @return null|\stdClass
      */
 
 
@@ -722,7 +753,7 @@ class BEnumScheme{
 
     /**
      *
-     * @param $val Bitrix property value
+     * @param $val mixed Bitrix property value
      * @return mixed|null
      */
 
@@ -737,7 +768,7 @@ class BEnumScheme{
     /**
      * Return Bitrix-style array fo enum: <code> array('ENUM_ID' => id);</code>
      *
-     * @param $val ORM field value
+     * @param $val mixed ORM field value
      * @return array|null
      */
 

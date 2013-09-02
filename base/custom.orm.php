@@ -19,20 +19,14 @@ require_once(dirname(__FILE__).'/bitrix.orm.php');
 class CustomORM extends BitrixORM{
 
 
-    /**
-     * @var CustomORMMap
-     */
-
-    protected $map;
-
-    function __construct(CustomORMMap $map){
-        parent::__construct($map);
+    function __construct(){
+       parent::__construct();
     }
 
 
     protected function __Load($arFilter,$arSort,$arNav,$arSelect){
 
-        $sqlQuery = "select ".implode(',',$arSelect)." from ".$this->map->table;
+        $sqlQuery = "select ".implode(',',$arSelect)." from ".$this->mapref->table;
 
         if(is_array($arFilter) && count($arFilter)>0){
             $sqlQuery.=" where ".implode(' and ',$arFilter);
@@ -62,9 +56,9 @@ class CustomORM extends BitrixORM{
 
     protected function _create(){
 
-        $sqlStr = "insert into ".$this->map->table;
+        $sqlStr = "insert into ".$this->mapref->table;
 
-        $data = $this->map->fields_to_create($this);
+        $data = $this->mapref->fields_to_create($this);
 
         $fields = array_keys($data->fields);
         $values = array_values($data->fields);
@@ -79,9 +73,9 @@ class CustomORM extends BitrixORM{
 
     protected function _update(){
 
-        $sqlStr = 'update '.$this->map->table.' set ';
+        $sqlStr = 'update '.$this->mapref->table.' set ';
 
-        $data = $this->map->fields_to_update($this);
+        $data = $this->mapref->fields_to_update($this);
 
         $values = array();
 
@@ -99,7 +93,7 @@ class CustomORM extends BitrixORM{
 
     public function delete(){
 
-        $sqlStr = 'delete from '.$this->map->table.' '.$this->_where_id();
+        $sqlStr = 'delete from '.$this->mapref->table.' '.$this->_where_id();
         return !!$this->query($sqlStr);
 
     }
@@ -108,7 +102,7 @@ class CustomORM extends BitrixORM{
 
     protected function _where_id(){
 
-        if($this->map->has_id) return 'where id = '.$this->_id;
+        if($this->mapref->has_id) return 'where id = '.$this->_id;
 
         else{
 
@@ -116,7 +110,7 @@ class CustomORM extends BitrixORM{
 
             $fields = array();
 
-            foreach($this->map->unique as $key){
+            foreach($this->mapref->unique as $key){
 
                 $field = '_'.$key;
 
@@ -299,3 +293,5 @@ class CustomORMMap extends BitrixORMMap{
 
 }
 
+
+BitrixORM::registerMapClass(new CustomORMMap(), CustomORM::className());
