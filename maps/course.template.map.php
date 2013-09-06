@@ -11,7 +11,7 @@ require_once(dirname(__FILE__).'/../assign/assignable.php');
 
 class CourseTemplateMap extends AssignableMap{
 
-    public $iblock_id = 31;
+    public $iblock_id = 36;
 
     public $assign_code = 'COURSE';
 
@@ -23,16 +23,16 @@ class CourseTemplateMap extends AssignableMap{
             'type' => BitrixORMDataTypes::BOOL,
             'list' =>
                 array(
-                   array('value' => true, 'bvalue' => 'Y', 'enum_id' => 59),
-                   array('value' => false, 'bvalue' => 'N', 'enum_id' => 60)
+                   array('value' => true, 'bvalue' => 'Y', 'enum_id' => 86),
+                   array('value' => false, 'bvalue' => 'N', 'enum_id' => 87)
                 )
         )),
         array('bname' => 'IS_PUBLIC', 'name' => 'is_public', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
             'type' => BitrixORMDataTypes::BOOL,
             'list' =>
             array(
-                array('value' => true, 'bvalue' => 'Y', 'enum_id' => 77),
-                array('value' => false, 'bvalue' => 'N', 'enum_id' => 78)
+                array('value' => true, 'bvalue' => 'Y', 'enum_id' => 85),
+                array('value' => false, 'bvalue' => 'N', 'enum_id' => 84)
             )
         )),
     );

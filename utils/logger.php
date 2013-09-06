@@ -12,6 +12,14 @@ define(LOGGER,true);
 
 class Logger {
 
+    const DEBUG = 4;
+    const WARNING = 2;
+    const ERROR = 1;
+
+    public static $LEVEL = WARNING;
+
+    public static $LOG_DIR = "/var/www/tmp/logs/";
+
 
     /**
      *
@@ -25,9 +33,15 @@ class Logger {
 
     public static function print_debug($object, $public = true, $height = null){
 
+        if(Logger::$LEVEL < Logger::DEBUG) return;
+
         if(is_object($object) && $public){
-            $o = get_object_vars($object);
-        }else
+            if($object instanceof tSerializable)
+                $o = $object->jsonData();
+            else
+                $o = get_object_vars($object);
+        }
+        else
             $o =& $object;
         if(!$height){
             $heightBlock = "min-height: auto";
@@ -53,7 +67,12 @@ class Logger {
 
 
     public static function log($message,$level){
-        //TODO: implement logging to file or database
+
+        if(Logger::$LEVEL == Logger::DEBUG) Logger::print_debug(array('LEVEL' => $level, 'MESSAGE' => $message));
+        else{
+            // todo log to file
+        }
+
     }
 
 
