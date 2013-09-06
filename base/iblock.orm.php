@@ -160,7 +160,8 @@ class IBlockORM extends BitrixORM{
         if(defined('LOGGER')) Logger::print_debug($arFields);
 
         if($el->Update($this->_id, $arFields)) return $this;
-
+        else
+            if(defined('LOGGER')) Logger::log(array('action' => 'update_element', 'id' => $this->_id,  'data' => $data, 'message' => $el->LAST_ERROR), "error");
 
         return false;
     }
@@ -182,7 +183,9 @@ class IBlockORM extends BitrixORM{
             $this->_id = intval($ID);
             $this->_created = true;
             return $this;
-        }
+        }else
+            if(defined('LOGGER')) Logger::log(array('action' => 'add_element', 'data' => $arFields, 'message' => $el->LAST_ERROR), "error");
+
 
         return false;
     }

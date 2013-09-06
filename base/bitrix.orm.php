@@ -9,6 +9,7 @@ namespace ru\teachbase;
 
 require_once(dirname(__FILE__).'/i.serializable.php');
 require_once(dirname(__FILE__).'/../utils/utils.php');
+require_once(dirname(__FILE__).'/../utils/file.php');
 
 abstract class BitrixORM implements tSerializable{
 
@@ -711,8 +712,21 @@ class BMapRule{
     private function from_bool($val){  return $val ? "Y" : "N";   }
     private function to_object($val){  return unserialize($val);   }
     private function from_object($val){  return serialize($val);   }
-    private function to_json($val){  return json_decode($val,true);   }
+    private function to_json($val){  return json_decode($val,false);   }
     private function from_json($val){  return json_encode($val);   }
+
+
+    private function to_file($val){
+        if(!intval($val) || !class_exists('CFile')) return null;
+        $f = new File();
+        return  $f->fromBitrixData(CFile::GetFileArray(intval($val)));
+    }
+
+    private function from_file($val){
+        if(is_null($val)) return null;
+        return $val->toFileArray();
+    }
+
 
     private function to_enum($val){
         if(!$this->enum_scheme) return null;
