@@ -179,7 +179,7 @@ class BitrixUserORM extends BitrixORM{
             $this->_id = intval($ID);
             $this->_created = true;
             return $this;
-        }else if(defined('LOGGER')) Logger::log(array('action' => 'add_user', 'data' => $arFields, 'message' => $usr->LAST_ERROR), "error");
+        }else Logger::log(array('action' => 'add_user', 'data' => $arFields, 'message' => $usr->LAST_ERROR), "error");
 
         return false;
     }
@@ -197,7 +197,7 @@ class BitrixUserORM extends BitrixORM{
         if(defined('LOGGER')) Logger::print_debug($arFields);
 
         if($usr->Update($this->_id, $arFields)) return $this;
-        else if(defined('LOGGER')) Logger::log(array('action' => 'update_user', 'id' => $this->_id, 'data' => $data, 'message' => $usr->LAST_ERROR), "error");
+        else Logger::log(array('action' => 'update_user', 'id' => $this->_id, 'data' => $data, 'message' => $usr->LAST_ERROR), "error");
 
         return false;
     }

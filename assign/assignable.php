@@ -8,6 +8,7 @@
 namespace ru\teachbase;
 
 require_once(dirname(__FILE__) . '/../base/iblock.orm.php');
+require_once(dirname(__FILE__).'/assign.manager.php');
 
 
 class Assignable extends IBlockORM{

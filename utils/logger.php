@@ -8,7 +8,7 @@
 
 namespace ru\teachbase;
 
-define(LOGGER,true);
+require_once(dirname(__FILE__).'/last_error.php');
 
 class Logger {
 
@@ -16,9 +16,7 @@ class Logger {
     const WARNING = 2;
     const ERROR = 1;
 
-    public static $LEVEL = WARNING;
-
-    public static $LOG_DIR = "/var/www/tmp/logs/";
+    public static $LEVEL = self::WARNING;
 
 
     /**
@@ -69,8 +67,9 @@ class Logger {
     public static function log($message,$level){
 
         if(Logger::$LEVEL == Logger::DEBUG) Logger::print_debug(array('LEVEL' => $level, 'MESSAGE' => $message));
-        else{
-            // todo log to file
+
+        if($level != "debug"){
+            LastError::$level($message);
         }
 
     }

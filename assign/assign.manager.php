@@ -19,7 +19,7 @@ require_once(dirname(__FILE__) . '/../maps/assign.relation.map.php');
 
 class AssignManager {
 
-    function find_by_element_id($id, $role = false){
+    static function find_by_element_id($id, $role = false){
 
         $filter = filter()->by_element_id($id);
 
@@ -29,7 +29,7 @@ class AssignManager {
 
     }
 
-    function find_by_user_id($user_id, $role = false){
+    static function find_by_user_id($user_id, $role = false){
 
         $filter = filter()->by_user_id($user_id);
 
@@ -40,34 +40,34 @@ class AssignManager {
     }
 
 
-    function find($user_id, $element_id){
+    static function find($user_id, $element_id){
         return Relation::find(filter()->by_user_id($user_id)->by_element_id($element_id));
     }
 
 
-    function delete_by_user_id($user_id){
+    static function delete_by_user_id($user_id){
 
 
 
     }
 
 
-    function delete_by_element_id($element_id){
+    static function delete_by_element_id($element_id){
 
     }
 
 
-    function delete($user_id,$element_id){
+    static function delete($user_id,$element_id){
 
     }
 
 
-    function add($element_id,$user_id,$role = null){
+    static function add($element_id,$user_id,$role = null){
 
     }
 
 
-    function change_role($element_id,$user_id,$role){
+    static function change_role($element_id,$user_id,$role){
 
     }
 

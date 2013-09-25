@@ -21,10 +21,16 @@ class File implements  tSerializable{
     private $_mime = '';
     private $_ts = 0;
 
+    private $_id;
+
     private $_width = 0;
     private $_height = 0;
 
-    function __construct(){
+    private $_initialized = false;
+
+    function __construct($id){
+
+        $this->_id = $id;
 
     }
 
@@ -33,13 +39,15 @@ class File implements  tSerializable{
      *
      * Fill properties from bitrix-style array <code>CFile::GetFileArray($id)</code>.
      *
-     * @param $data
      * @return $this
      */
 
 
-    public function fromBitrixData($data){
+    public function init(){
 
+        if(!class_exists('CFile') || !$this->_id || $this->_initialized) return $this;
+
+        $data = \CFile::GetFileArray($this->_id);
 
         $this->_name = $data['FILE_NAME'];
         $this->_mime = $data['CONTENT_TYPE'];
@@ -51,6 +59,8 @@ class File implements  tSerializable{
 
         $this->_width = intval($data['WIDTH']);
         $this->_height = intval($data['HEIGHT']);
+
+        $this->_initialized = true;
 
         return $this;
 
@@ -89,6 +99,9 @@ class File implements  tSerializable{
     public function __get($name){
 
         if(in_array("_".$name, get_object_vars($this))){
+
+            if(!$this->_initialized) $this->init();
+
             $prop = "_".$name;
             return $this->$prop;
         }

@@ -65,7 +65,12 @@ class CustomORM extends BitrixORM{
 
         $sqlStr.=' ('.implode(',',$fields).') values ('.implode(',',$values).')';
 
-        if(!$this->query($sqlStr)) return false;
+        if(!$this->query($sqlStr)){
+
+            Logger::log("Query failed: ".$sqlStr,"error");
+
+            return false;
+        }
 
         return $this;
     }
@@ -85,7 +90,10 @@ class CustomORM extends BitrixORM{
 
         $sqlStr.=implode(',',$values).' '.$this->_where_id();
 
-        if(!$this->query($sqlStr)) return false;
+        if(!$this->query($sqlStr)){
+            Logger::log("Query failed: ".$sqlStr,"error");
+            return false;
+        }
 
         return $this;
     }
@@ -136,7 +144,10 @@ class CustomORM extends BitrixORM{
 
         global $DB;
 
-        if(!is_object($DB)) return false;
+        if(!is_object($DB)){
+            Logger::log(__FILE__.":".__LINE__." ".__FUNCTION__.": DB undefined","error");
+            return false;
+        }
 
         return $DB->Query($sqlString,false);
 

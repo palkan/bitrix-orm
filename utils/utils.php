@@ -1,6 +1,6 @@
 <?
 /**
- * User: VOVA
+ * User: palkan
  * Date: 27.03.13
  * Time: 14:07
  */
@@ -265,4 +265,105 @@ function make_assoc($array,$field){
 
     return array_combine($keys,array_values($array));
 
+}
+
+/**
+ *
+ * Make POST request to <code>url</code>.
+ *
+ *
+ * @param $url string Target URL
+ * @param $data array Assoc array with params
+ * @return \stdClass  With fields <code>data</code>  containing response, <code>code</code> - HTTP status code.
+ */
+
+
+function curl_post($url,$data){
+    $query = '';
+
+    foreach ($data as $key => $val)
+        $query .= $key . "=" . $val . "&";
+
+    if(defined('LOGGER')) Logger::print_debug(array('data' => $data,'qs' => $query));
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+
+    $response = new \stdClass();
+
+    $response->data = curl_exec($ch);
+
+    $response->code = intval(curl_getinfo($ch,CURLINFO_HTTP_CODE));
+
+    curl_close($ch);
+
+    return $response;
+}
+
+
+/**
+ *
+ * Make get request to <code>url</code>.
+ *
+ * @param $url
+ * @return \stdClass  With fields <code>data</code>  containing response, <code>code</code> - HTTP status code.
+ */
+
+function curl_get($url){
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = new \stdClass();
+
+    $response->data = curl_exec($ch);
+
+    $response->code = intval(curl_getinfo($ch,CURLINFO_HTTP_CODE));
+
+    curl_close($ch);
+
+    return $response;
+
+}
+
+
+/**
+ *
+ * Convert array to object recursively.
+ *
+ * @param $arr
+ * @param int $deep Recursion depth
+ * @return mixed
+ */
+
+function array_to_object($arr,$deep = 0){
+
+   if(is_assoc_array($arr)){
+       $data = new \stdClass();
+
+       foreach($arr as $key => $val){
+           if($deep)
+            $data->$key = array_to_object($val,$deep-1);
+           else
+            $data->$key = $val;
+       }
+
+       return $data;
+   }
+
+   return $arr;
+
+}
+
+/**
+ * Check whether array <code>arr</code> has standard int keys (0,1,...) or not.
+ *
+ * @param $arr
+ * @return bool
+ */
+
+function is_assoc_array($arr){
+    return ($arr !== array_values($arr));
 }

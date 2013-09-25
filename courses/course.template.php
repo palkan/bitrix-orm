@@ -9,7 +9,7 @@ namespace ru\teachbase;
 
 require(dirname(__FILE__) . '/../maps/course.template.map.php');
 
-class CourseTemplate extends IBlockORM{
+class CourseTemplate extends Assignable{
 
     protected $_partner_id;
 
