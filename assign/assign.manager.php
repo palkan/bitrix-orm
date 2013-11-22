@@ -19,57 +19,73 @@ require_once(dirname(__FILE__) . '/../maps/assign.relation.map.php');
 
 class AssignManager {
 
-    static function find_by_element_id($id, $role = false){
+    public static function find_by_element_id($id, $role = false, &$nav = null){
 
         $filter = filter()->by_element_id($id);
 
         if($role) $filter = $filter->by_role($role);
 
-        return make_assoc(Relation::find($filter),'user_id');
+        return make_assoc(Relation::find($filter, $nav),'user_id');
 
     }
 
-    static function find_by_user_id($user_id, $role = false){
+    public static function find_by_user_id($user_id, $role = false, $code = false, &$nav = null){
 
         $filter = filter()->by_user_id($user_id);
 
         if($role) $filter = $filter->by_role($role);
+        if($code) $filter = $filter->by_code($code);
 
-        return make_assoc(Relation::find($filter),'element_id');
+        return make_assoc(Relation::find($filter,$nav),'element_id');
+
+    }
+
+    /**
+     *
+     * Return <i>Relation</i> between <i>element_id</i> and <i>user_id</i> or <i>false</i>.
+     *
+     * @param $user_id
+     * @param $element_id
+     * @return bool|Relation
+     */
+
+    public static function find($user_id, $element_id){
+        $rels = Relation::find(filter()->by_user_id($user_id)->by_element_id($element_id));
+
+        if(count($rels)) return reset($rels);
+
+        return false;
+    }
+
+
+    public static function delete_by_user_id($user_id){
+
+        $rel = new Relation();
+
+        return Relation::delete_many_by_conditions($rel->mapref->table, array('user_id' => $user_id));
 
     }
 
 
-    static function find($user_id, $element_id){
-        return Relation::find(filter()->by_user_id($user_id)->by_element_id($element_id));
-    }
+    public static function delete_by_element_id($element_id){
 
+        $rel = new Relation();
 
-    static function delete_by_user_id($user_id){
-
-
+        return Relation::delete_many_by_conditions($rel->mapref->table, array('element_id' => $element_id));
 
     }
 
 
-    static function delete_by_element_id($element_id){
+    public static function delete($user_id,$element_id){
+        $rel = Relation::find(filter()->by_user_id($user_id)->by_element_id($element_id));
 
+        if(!count($rel)) return true;
+
+        $rel = reset($rel);
+
+        return $rel->delete();
     }
 
-
-    static function delete($user_id,$element_id){
-
-    }
-
-
-    static function add($element_id,$user_id,$role = null){
-
-    }
-
-
-    static function change_role($element_id,$user_id,$role){
-
-    }
 
 }
 

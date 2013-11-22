@@ -3,6 +3,7 @@
 namespace ru\teachbase;
 
 require_once(dirname(__FILE__)."/fyler.api.php");
+require_once(dirname(__FILE__) . "/redis.php");
 
 /**
  *
@@ -25,8 +26,6 @@ class ConversionManager {
      */
 
     const RDB = "tasks_";
-
-    const REDIS = "10.59.55.82";
 
     const CALLBACK = "/api/fyler/callback/";
 
@@ -52,9 +51,9 @@ class ConversionManager {
 
     public static function fyler_convert($id, $type, $url, $conversion_options = array(), $listeners = array()){
 
-        $redis = new \Redis();
+        $redis = RedisClient::get();
 
-        if($redis->connect(self::REDIS)){
+        if($redis){
 
             $tid = $redis->incr(self::RDB."total");
             $key = self::RDB.$tid;
@@ -62,12 +61,11 @@ class ConversionManager {
             $data = array(
                 'type' => $type,
                 'id' => $id,
-                'listeners' => $listeners
+                'listeners' => $listeners,
+                'status' => 'progress'
             );
 
             $conversion_options['callback'] = "http://".$_SERVER['HTTP_HOST'].self::CALLBACK.$key;
-
-            if(defined('LOGGER')) Logger::log("Convert: $id,  $type, $url","debug");
 
             $fyler = new FylerAPI(self::FYLER_HOST);
 
@@ -75,25 +73,30 @@ class ConversionManager {
 
             if($fyler->send_task($type,$url,$conversion_options)){
                 $redis->set($key,json_encode($data));
-                $redis->close();
-                return $key;
+                return $tid;
             }else
                  return false;
-        }else
-            Logger::log($redis->getLastError(),'error');
 
+            $redis->close();
+        }
 
         return false;
     }
 
 
+    /**
+     * @param $id  string Task id
+     * @param $data mixed   Post data as object
+     * @param $post_data mixed  Raw post data (as array).
+     */
 
-    public static function task_complete($id,$data){
 
-        $redis = new \Redis();
+    public static function task_complete($id,$data,$post_data){
+
+        $redis = RedisClient::get();
 
 
-        if($redis->connect(self::REDIS)){
+        if($redis){
 
             if($val = $redis->get(self::RDB.$id)){
                 $task = json_decode($val,false);
@@ -101,15 +104,16 @@ class ConversionManager {
                 $data->type = $task->type;
                 $data->id = $task->id;
 
-                Logger::log(array('data' => serialize($data), 'task' => serialize($task)),"warning");
-
                 $doc = Document::find_by_id($task->id);
 
                 if($doc){
 
                     $doc->conversion_complete($data);
+                    $task->status = 'complete';
 
-                    foreach($task->listeners as $l) self::invoke_listener($l,$data);
+                    $redis->set(self::RDB.$id,json_encode($task));
+
+                    foreach($task->listeners as $l) self::invoke_listener($l,$post_data);
 
                 }else
                     Logger::log(__CLASS__.":".__LINE__." Document not found $task->id","warning");
@@ -117,8 +121,38 @@ class ConversionManager {
 
             $redis->close();
 
-        }else
-            Logger::log($redis->getLastError(),'error');
+        }
+
+    }
+
+    /**
+     *
+     * Get task info from Redis by id.
+     *
+     * @param $id
+     * @return bool|mixed|null
+     */
+
+    public static function get_task($id){
+
+        $redis = RedisClient::get();
+
+
+        if($redis){
+
+            if($val = $redis->get(self::RDB.$id)){
+                $task = json_decode($val,false);
+
+                return $task;
+            }
+
+            $redis->close();
+
+            return false;
+
+        }
+
+        return null;
 
     }
 
@@ -131,10 +165,6 @@ class ConversionManager {
         $l->dispatch($data);
 
     }
-
-
-
-
 
 }
 

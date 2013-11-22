@@ -45,6 +45,7 @@ class DocumentMap extends AssignableMap{
                 array('value' => 'table', 'bvalue' => 'TABLE', 'enum_id' => 107),
                 array('value' => 'other', 'bvalue' => 'OTHER', 'enum_id' => 101),
                 array('value' => 'folder', 'bvalue' => 'FOLDER', 'enum_id' => 108),
+                array('value' => 'recording', 'bvalue' => 'RECORDING', 'enum_id' => 109)
             )
         )),
         array('bname' => 'DATA', 'name' => 'data', 'type' => BitrixORMDataTypes::JSON)

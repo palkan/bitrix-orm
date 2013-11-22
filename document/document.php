@@ -355,6 +355,10 @@ class Document extends Assignable
 
         $data->pdf = $this->pdf();
 
+        $data->file = $this->_file ? $this->_file->path : "";
+
+        $data->thumb = $this->_thumb ? $this->_thumb->path : "";
+
         return $data;
     }
 
@@ -460,12 +464,14 @@ class Document extends Assignable
             return false;
         }
 
-        if($this->pdf())
-            $key = ConversionManager::fyler_convert($this->_id, 'pdf_thumb', $this->pdf(), array(), $listeners);
+        if($this->_type == DocumentType::DOCUMENT
+            || $this->_type == DocumentType::PRESENTATION
+            || $this->_type == DocumentType::TABLE)
+            return $this->build_thumbs($listeners);//$key = ConversionManager::fyler_convert($this->_id, 'pdf_thumb', $this->pdf(), array(), $listeners);
         elseif($this->_type == DocumentType::IMAGE)
             $key = ConversionManager::fyler_convert($this->_id, 'image_thumb', $this->_file->path, array(), $listeners);
         else{
-            Logger::log(__CLASS__ . ":" . __LINE__ . " Action is not possible, this type is " . $this->_type.", id: ".$this->_id, "error");
+            Logger::log(__CLASS__ . ":" . __LINE__ . " Action is not possible, this type is " . $this->_type.", id: ".$this->_id, "warning");
             return false;
         }
 
@@ -610,6 +616,49 @@ class Document extends Assignable
     }
 
 
+    /**
+     *
+     * Run converter task to create hls from meeting recording flv video.
+     *
+     * @param array $listeners  Additional URLs to invoke on task complete.
+     * @return bool
+     */
+
+    public function build_hls_recording($listeners = array())
+    {
+
+        if ($this->_type != DocumentType::RECORDING)
+        {
+            Logger::log(__CLASS__ . ":" . __LINE__ . " Action is not possible, this type is " . $this->_type.", id: ".$this->_id, "error");
+            return false;
+        }
+
+
+        if ($this->_data && $this->_data->task_key) {
+            Logger::log("Task in progress: " . $this->_data->task_key.", id: ".$this->_id, "error");
+            return false;
+        }
+
+
+        if (!$this->_data || !property_exists($this->_data,"stream_to_convert")) {
+            Logger::log("No stream to convert in data, id: ".$this->_id, "error");
+            return false;
+        }
+
+        $key = ConversionManager::fyler_convert($this->_id, 'flv_to_hls', $this->_data->url.$this->_data->stream_to_convert->name.".flv", array("target_dir" => $this->_data->url.$this->_data->stream_to_convert->name."/", "stream_type" => $this->_data->stream_to_convert->type), $listeners);
+
+        if ($key) {
+            $data = $this->data() ? $this->data() : new \stdClass();
+            $data->converting = true;
+            $data->task_key = $key;
+            $this->data($data);
+            return true;
+        } else
+            return false;
+
+    }
+
+
     public function conversion_complete($result)
     {
 
@@ -656,7 +705,7 @@ class Document extends Assignable
      */
 
     private function image_thumb($result){
-        $this->build_thumb_from_path("http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->path[0]);
+        $this->build_thumb_from_path("http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$result->data->path[0]);
     }
 
     /**
@@ -667,11 +716,11 @@ class Document extends Assignable
     {
         $data = $this->data();
 
-        $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->path[0];
+        $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$result->data->path[0];
 
         $this->data($data);
 
-        if (!is_null($this->_thumb) && $this->thumbs() && count($this->thumbs())) {
+        if (!$this->_thumb && $this->thumbs() && count($this->thumbs())) {
             $this->build_thumb_from_path(current($this->thumbs()));
         }
     }
@@ -686,7 +735,7 @@ class Document extends Assignable
     {
         $data = $this->data();
 
-        $data->pages = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->path[0];
+        $data->pages = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$result->data->path[0];
 
         $this->data($data);
     }
@@ -704,12 +753,12 @@ class Document extends Assignable
 
         foreach ($result->data->path as $p) {
 
-            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
-            if (preg_match('/^.+\pages.json$/i', $p)) $data->pages = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+\pages.json$/i', $p)) $data->pages = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
             if (preg_match('/^.+\thumbs.json$/i', $p)) {
-                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
                 $this->data($data);
 
@@ -735,7 +784,7 @@ class Document extends Assignable
     {
         $data = $this->data();
 
-        $data->swf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->path[0];
+        $data->swf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$result->data->path[0];
 
         $this->data($data);
     }
@@ -752,14 +801,14 @@ class Document extends Assignable
 
         foreach ($result->data->path as $p) {
 
-            if (preg_match('/^.+swfs\.json$/i', $p)) $data->swf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+swfs\.json$/i', $p)) $data->swf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
             if (preg_match('/^.+thumbs\.json$/i', $p)) {
-                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
                 $this->data($data);
 
-                if (!is_null($this->_thumb) && $this->thumbs() && count($this->thumbs())) {
+                if (!$this->_thumb && $this->thumbs() && count($this->thumbs())) {
                     $this->build_thumb_from_path(current($this->thumbs()));
                 }
 
@@ -778,9 +827,9 @@ class Document extends Assignable
     {
         $data = $this->data();
         foreach ($result->data->path as $p) {
-            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
-            if (preg_match('/^.+\.png$/i', $p)) $this->build_thumb_from_path("http://" . $result->bucket . ".s3.amazonaws.com/" . $p);
+            if (preg_match('/^.+\.png$/i', $p)) $this->build_thumb_from_path("http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p);
         }
         $this->data($data);
     }
@@ -796,10 +845,10 @@ class Document extends Assignable
         $data = $this->data();
 
         foreach ($result->data->path as $p) {
-            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
             if (preg_match('/^.+\.json$/i', $p)) {
-                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
                 $this->data($data);
 
@@ -824,21 +873,57 @@ class Document extends Assignable
         $data = $this->data();
 
         foreach ($result->data->path as $p) {
-            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+\.pdf$/i', $p)) $data->pdf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
-            if (preg_match('/^.+swfs\.json$/i', $p)) $data->swf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+            if (preg_match('/^.+swfs\.json$/i', $p)) $data->swf = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
             if (preg_match('/^.+thumbs\.json$/i', $p)) {
-                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $p;
+                $data->thumbs = "http://" . $result->bucket . ".s3.amazonaws.com/" . $result->data->dir.'/'.$p;
 
                 $this->data($data);
 
-                if (!is_null($this->_thumb) && $this->thumbs() && count($this->thumbs())) {
+                if (!$this->_thumb && $this->thumbs() && count($this->thumbs())) {
                     $this->build_thumb_from_path(current($this->thumbs()));
                 }
 
             }
 
+        }
+
+        $this->data($data);
+    }
+
+
+    /**
+     *
+     * Convert flv_to_hls
+     *
+     * @param $result mixed Contains URL to M3U8 playlist as <code>$result->data->path[0]</code>.
+     */
+
+    private function flv_to_hls($result)
+    {
+        $data = $this->data();
+
+        if($this->_type == DocumentType::RECORDING){
+            unset($data->stream_to_convert);
+
+            if(count($data->streams)){
+
+                $data->stream_to_convert = current($data->streams);
+
+                $this->data($data);
+
+                if($this->build_hls_recording() !== false){
+                    $data = $this->data();
+                    array_shift($data->streams);
+                }else{
+                    Logger::log("Failed to run new task for converting another hls stream, id: ".$this->_id, "error");
+                }
+            }else
+                $data->converting = false;
+        }else{
+            Logger::log("flv_to_hls for not recording is not implemented yet, id: ".$this->_id, "error");
         }
 
         $this->data($data);
@@ -934,6 +1019,7 @@ class DocumentType
     const PRESENTATION = 'presentation';
     const DOCUMENT = 'document';
     const TABLE = 'table';
+    const RECORDING = 'recording';
 
     static $ext2type = array(
         'doc' => DocumentType::DOCUMENT,

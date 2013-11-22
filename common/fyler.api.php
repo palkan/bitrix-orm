@@ -40,7 +40,7 @@ class FylerAPI {
         $this->_login = $login;
         $this->_pass = $pass;
 
-        $response = $this->post('auth',array('login'=>$login,'pass'=>md5($pass)));
+        $response = $this->post('auth',array('login'=>$login,'pass'=>$pass));
 
         if(defined('LOGGER')) Logger::print_debug($response);
 

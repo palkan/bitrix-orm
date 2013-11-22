@@ -7,9 +7,11 @@
 
 namespace ru\teachbase;
 
-require(dirname(__FILE__) . '/../maps/meeting.map.php');
+require(__DIR__. '/../maps/meeting.map.php');
+require(__DIR__.'/../common/erly.api.php');
+//require_once(__DIR__.'/../common/authored.block.php');
 
-class Meeting extends Assignable{
+class Meeting extends Assignable{//AuthoredBlock{
 
     protected $_partner_id;
     protected $_type;
@@ -30,6 +32,71 @@ class Meeting extends Assignable{
     function __construct(){
         parent::__construct();
     }
+
+    /**
+     * @param $users_roles  array Associative array [user_id] => [user_role]
+     * @return bool
+     */
+
+    public function add_participants($users_roles){
+
+        if(!$this->_id){
+            Logger::log(__CLASS__.":".__LINE__." Trying to assign users to not saved meeting","error");
+            return false;
+        }
+
+        return $this->_assign($users_roles);
+    }
+
+    /**
+     * @param $user_ids array Users' ids.
+     * @return bool
+     */
+
+    public function remove_participants($user_ids){
+
+        if(!is_array($user_ids)) $user_ids = array($user_ids);
+
+        if(!$this->_id){
+            Logger::log(__CLASS__.":".__LINE__." Trying to unassign users from not saved meeting","error");
+            return false;
+        }
+
+        return $this->_unassign($user_ids);
+    }
+
+    /**
+     * First finish meeting and then delete.
+     * @return bool
+     */
+
+    public function delete(){
+        $this->finish(false);
+        return parent::delete();
+    }
+
+    /**
+     * Finish meeting and stop Erly meeting.
+     * Save statistics (not implemented yet).
+     *
+     * @param bool $commit
+     * @return $this
+     */
+
+    public function finish($commit = true){
+
+        $api = new ErlyAPI("http://test2013.teachbase.ru:8082/");
+        $api->finish_meeting($this->_id);
+
+        //todo: receive statistics from Erly and save it
+
+        $this->date_active_to(time());
+
+        if(!$commit) return $this;
+
+        return $this->save();
+    }
+
 }
 
 

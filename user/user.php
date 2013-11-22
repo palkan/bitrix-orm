@@ -10,6 +10,7 @@ namespace ru\teachbase;
 require_once(dirname(__FILE__) . '/../base/user.orm.php');
 require(dirname(__FILE__) . '/../maps/user.map.php');
 require_once(dirname(__FILE__) . '/../assign/assign.manager.php');
+require_once(dirname(__FILE__) . '/../partner/partner.php');
 
 class User extends BitrixUserORM{
 
@@ -20,6 +21,8 @@ class User extends BitrixUserORM{
     protected $_notifications = 0;
 
     protected $_notifications_sms = 0;
+
+    private $_partners;
 
     private $_photo_path;
 
@@ -73,6 +76,23 @@ class User extends BitrixUserORM{
 
     public function show_hints($val = null){return $this->_commit(__FUNCTION__,$val);}
 
+    /**
+     * @param $email
+     * @param $name
+     * @return $this
+     */
+
+    public static function register($email, $name){
+
+        $user = new User();
+
+        $user->active(true);
+        $user->email($email);
+        $user->login($email);
+        $user->name($name);
+
+        return $user->save();
+    }
 
     public function full_name(){
         $res = $this->_name;
@@ -92,7 +112,7 @@ class User extends BitrixUserORM{
     }
 
     /**
-     * Returns array of partners for User
+     * Returns array of relations user-partner
      *
      * @return array
      *
@@ -100,21 +120,16 @@ class User extends BitrixUserORM{
 
     public function partners(){
 
-        //TODO: method stub
+        if(is_null($this->_partners)){
+            $this->_partners = AssignManager::find_by_user_id($this->_id, false, BitrixORM::assignCodeByClass(Partner::className()));
+        }
 
-
-        return array(new Partner());
-
+        return $this->_partners;
     }
 
 
     public function delete(){
-
-        if(parent::delete()){
-            AssignManager::delete_by_user_id($this->_id);
-            return true;
-        }else return false;
-
+        return self::delete_by_id($this->_id);
     }
 
     public static function delete_by_id($id){
@@ -124,6 +139,15 @@ class User extends BitrixUserORM{
             return true;
         }else return false;
 
+    }
+
+
+    public function jsonData(){
+        $data = parent::jsonData();
+
+        if(!is_null($this->_partners)) $data->partners = array_map(function($p){ return $p->jsonData();}, array_values($this->_partners));
+
+        return $data;
     }
 
 }

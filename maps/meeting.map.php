@@ -7,7 +7,7 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../assign/assignable.php');
+require_once(__DIR__.'/../assign/assignable.php');
 
 class MeetingMap extends AssignableMap{
 

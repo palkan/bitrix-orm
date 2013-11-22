@@ -55,17 +55,19 @@ class CurrentPartner{
     private $_initialized = false;
 
 
-    const PREFIX = 'sess_auth/partner/';
+    const PREFIX = 'tb_auth/user/partner/';
 
 
     function __construct(){
+
+       if(defined("LOGGER")) Logger::print_debug(session(self::PREFIX));
 
        if(session(self::PREFIX)){
 
            foreach(get_object_vars($this) as $key => $val)
                $this->$key = session(self::PREFIX.$key);
 
-           $this->_initialized = true;
+           if(intval($this->id)) $this->_initialized = true;
 
        }
 

@@ -16,7 +16,7 @@ class PartnerMap extends AssignableMap{
     public $assign_code = 'PARTNER';
 
     public $props = array(
-        array('bname' => 'TARIFF', 'name' => 'tariff_id', 'type' => BitrixORMDataTypes::INT),
+        array('bname' => 'TARIF', 'name' => 'tariff_id', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'APS_ID', 'name' => 'aps_id', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'LOGO', 'name' => 'logo', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'SUBDOMAIN', 'name' => 'subdomain', 'type' => BitrixORMDataTypes::STRING),
