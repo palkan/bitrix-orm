@@ -10,7 +10,7 @@ namespace ru\teachbase;
 
 class LastError {
 
-    public static $LOG_DIR = "/var/www/.priv/log/";
+    public static $LOG_DIR = "/var/log/teachbase/";
 
     static $errors = array();
 
@@ -27,6 +27,11 @@ class LastError {
         self::$warnings[] = $message;
 
         self::write_to_file('warning',$message);
+    }
+
+    public static function debug($message){
+
+        self::write_to_file('debug',$message);
     }
 
     public static function last_error(){

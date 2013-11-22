@@ -68,9 +68,7 @@ class Logger {
 
         if(Logger::$LEVEL == Logger::DEBUG) Logger::print_debug(array('LEVEL' => $level, 'MESSAGE' => $message));
 
-        if($level != "debug"){
-            LastError::$level($message);
-        }
+        LastError::$level($message);
 
     }
 

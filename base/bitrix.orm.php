@@ -70,6 +70,21 @@ abstract class BitrixORM implements tSerializable{
     }
 
     /**
+     * @param $classname
+     * @return bool
+     */
+
+    public static function assignCodeByClass($classname){
+
+       if(!empty(self::$maps[$classname])){
+           $map = self::$maps[$classname];
+           return $map->assign_code;
+       }
+
+       return false;
+    }
+
+    /**
      * @return string
      */
 
@@ -149,6 +164,12 @@ abstract class BitrixORM implements tSerializable{
         $arNav = $navigation ? $navigation->toArray(): false;
 
         $arSort = $navigation ? $navigation->sortArray($instance->mapref) : false;
+
+        if(defined("LOGGER")){
+            Logger::print_debug($arNav);
+            Logger::print_debug($arSort);
+            Logger::print_debug($arFilter);
+        }
 
         $resArr = $instance->__Load($arFilter,$arSort,$arNav,$arSelect);
 

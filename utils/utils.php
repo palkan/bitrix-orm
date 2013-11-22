@@ -11,6 +11,8 @@ namespace ru\teachbase;
 class AjaxResponse
 {
 
+    const POLL_SLEEP_MAX = 10;
+    const POLL_SLEEP_TIME = 2;
 
     public $status = 1;
 
@@ -18,6 +20,9 @@ class AjaxResponse
 
     public $data;
 
+    private $_sleep_count=0;
+
+    private $_content_ready = false;
 
     function __construct()
     {
@@ -35,6 +40,26 @@ class AjaxResponse
 
     }
 
+    public function sleep(){
+
+        if($this->_content_ready) return false;
+
+        $this->_sleep_count++;
+
+        if($this->_sleep_count>=self::POLL_SLEEP_MAX){
+
+            return false;
+        }
+
+        sleep(self::POLL_SLEEP_TIME);
+        return true;
+    }
+
+
+
+    public function content_ready(){
+        $this->_content_ready = true;
+    }
 
     public function onShutdown()
     {
@@ -261,7 +286,7 @@ function session($path, $val = null)
 
 function make_assoc($array,$field){
 
-    $keys = array_map(function($obj) use ($field){ return $obj->$field;}, $array);
+    $keys = array_map(function($obj) use ($field){ return $obj->$field();}, $array);
 
     return array_combine($keys,array_values($array));
 
@@ -279,10 +304,13 @@ function make_assoc($array,$field){
 
 
 function curl_post($url,$data){
-    $query = '';
+
+    $query_data = array();
 
     foreach ($data as $key => $val)
-        $query .= $key . "=" . $val . "&";
+        $query_data[] = $key . "=" . $val;
+
+    $query = implode("&",$query_data);
 
     if(defined('LOGGER')) Logger::print_debug(array('data' => $data,'qs' => $query));
 
@@ -366,4 +394,20 @@ function array_to_object($arr,$deep = 0){
 
 function is_assoc_array($arr){
     return ($arr !== array_values($arr));
+}
+
+
+/**
+ *
+ * Convert time (as number of seconds) to readable string with respect to current time (e.g. "now", "in 2 minutes").
+ *
+ * @param $time int
+ *
+ * @return bool|string
+ */
+
+
+function time_to_string($time){
+  //todo:
+    return date('d.m.Y H:i', $time);
 }

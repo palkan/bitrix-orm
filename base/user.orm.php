@@ -129,6 +129,18 @@ class BitrixUserORM extends BitrixORM{
     }
 
 
+    /**
+     * @param bool $remember
+     * @return bool
+     */
+
+    public function authorize($remember = false){
+        global $USER;
+        if(!is_object($USER)) return false;
+        return $USER->Authorize($this->_id,$remember);
+    }
+
+
     protected function __Load($arFilter,$arSort,$arNav,$arSelect){
 
         $arParams = array(

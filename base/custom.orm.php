@@ -49,7 +49,7 @@ class CustomORM extends BitrixORM{
 
         if(defined('LOGGER')) Logger::print_debug($sqlQuery);
 
-        return $this->query($sqlQuery);
+        return self::query($sqlQuery);
     }
 
 
@@ -65,7 +65,9 @@ class CustomORM extends BitrixORM{
 
         $sqlStr.=' ('.implode(',',$fields).') values ('.implode(',',$values).')';
 
-        if(!$this->query($sqlStr)){
+        if(defined('LOGGER')) Logger::print_debug($sqlStr);
+
+        if(!self::query($sqlStr)){
 
             Logger::log("Query failed: ".$sqlStr,"error");
 
@@ -88,9 +90,11 @@ class CustomORM extends BitrixORM{
             $values[] = $key.' = '.$val;
         }
 
-        $sqlStr.=implode(',',$values).' '.$this->_where_id();
+        $sqlStr.=implode(',',$values).' where '.$this->_where_id();
 
-        if(!$this->query($sqlStr)){
+        if(defined('LOGGER')) Logger::print_debug($sqlStr);
+
+        if(!self::query($sqlStr)){
             Logger::log("Query failed: ".$sqlStr,"error");
             return false;
         }
@@ -101,8 +105,8 @@ class CustomORM extends BitrixORM{
 
     public function delete(){
 
-        $sqlStr = 'delete from '.$this->mapref->table.' '.$this->_where_id();
-        return !!$this->query($sqlStr);
+        $sqlStr = 'delete from '.$this->mapref->table.' where '.$this->_where_id();
+        return !!self::query($sqlStr);
 
     }
 
@@ -110,11 +114,11 @@ class CustomORM extends BitrixORM{
 
     protected function _where_id(){
 
-        if($this->mapref->has_id) return 'where id = '.$this->_id;
+        if($this->mapref->has_id) return 'id = '.$this->_id;
 
         else{
 
-            $str = 'where ';
+            $str = '';
 
             $fields = array();
 
@@ -122,7 +126,7 @@ class CustomORM extends BitrixORM{
 
                 $field = '_'.$key;
 
-                $fields[] = $key.' = '.$this->$field;
+                $fields[] = '('.$key.' = '.$this->$field.')';
 
             }
 
@@ -140,7 +144,7 @@ class CustomORM extends BitrixORM{
      * @return bool
      */
 
-    private function query($sqlString){
+    private static function query($sqlString){
 
         global $DB;
 
@@ -149,10 +153,128 @@ class CustomORM extends BitrixORM{
             return false;
         }
 
-        return $DB->Query($sqlString,false);
+        return $DB->Query($sqlString,true);
 
     }
 
+
+
+    /**
+     *
+     * Save many elements.
+     *
+     * Note: id is not set during this operation!
+     *
+     * @param $elements
+     * @return bool
+     */
+
+    public static function create_many($elements){
+
+        if(!count($elements)) return false;
+
+        if(!count($elements) == 1)
+            return !!current($elements)->save();
+
+        $el = current($elements);
+
+        $sqlStr = "insert into ".$el->mapref->table;
+
+        $data = $el->mapref->fields_to_create($el);
+
+        $fields = array_keys($data->fields);
+
+        $values = array();
+
+        foreach($elements as $element){
+            $data = $element->mapref->fields_to_create($element);
+            $values[] = '('.implode(',',array_values($data->fields)).')';
+        }
+
+
+        $sqlStr.=' ('.implode(',',$fields).') values '.implode(',',$values);
+
+
+        if(defined('LOGGER')) Logger::log($sqlStr,'debug');
+
+        if(!self::query($sqlStr)){
+
+            Logger::log("Query failed: ".$sqlStr,"error");
+
+            return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     *
+     * Delete many elements.
+     *
+     * @param $elements
+     * @return bool
+     */
+
+    public static function delete_many($elements){
+
+        if(!count($elements)) return false;
+
+        if(!count($elements) == 1)
+            return !!current($elements)->delete();
+
+        $el = current($elements);
+
+        $sqlStr = "delete from ".$el->mapref->table;
+
+        $where = array();
+
+        foreach($elements as $element){
+            $where[] = $element->_where_id();
+        }
+
+
+        $sqlStr.=' where '.implode(' or ',$where);
+
+        if(!self::query($sqlStr)){
+
+            Logger::log("Query failed: ".$sqlStr,"error");
+
+            return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @param $table
+     * @param $conditions mixed   Equality conditions in a form 'key'=>'value'
+     * @return bool
+     */
+
+    public static function delete_many_by_conditions($table, $conditions){
+
+        $sqlStr = "delete from ".$table;
+
+        $where = array();
+
+        foreach($conditions as $name => $val){
+            $where[] = '('.$name.' = '.$val.')';
+        }
+
+
+        $sqlStr.=' where '.implode(' and ',$where);
+
+        if(!self::query($sqlStr)){
+
+            Logger::log("Query failed: ".$sqlStr,"error");
+
+            return false;
+        }
+
+        return true;
+    }
 }
 
 
@@ -171,7 +293,7 @@ class CustomORMMap extends BitrixORMMap{
     /**
      * Array of fields that are unique in the table
      *
-     * Used while deleting
+     * Use to delete rows
      *
      * @var
      */
