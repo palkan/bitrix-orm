@@ -7,10 +7,10 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/i.serializable.php');
-require_once(dirname(__FILE__).'/../utils/utils.php');
-require_once(dirname(__FILE__).'/../utils/file.php');
-require_once(dirname(__FILE__).'/../utils/logger.php');
+require_once(__DIR__.'/i.serializable.php');
+require_once(__DIR__.'/../utils/utils.php');
+require_once(__DIR__.'/../utils/file.php');
+require_once(__DIR__.'/../utils/logger.php');
 
 abstract class BitrixORM implements tSerializable{
 
@@ -317,6 +317,7 @@ class BitrixORMDataTypes{
     const STRING = 'string';
     const DATETIME = 'datetime';
     const BOOL = 'bool';
+    const BOOL_STRING = 'bool_string';
     const ENUM = 'enum';
     const OBJECT = 'object';
     const JSON = 'json';
@@ -325,7 +326,7 @@ class BitrixORMDataTypes{
 
     public static function IsStringType($type){
 
-        return in_array($type,array(self::STRING,self::DATETIME,self::BOOL));
+        return in_array($type,array(self::STRING,self::DATETIME,self::BOOL_STRING));
 
     }
 
@@ -730,8 +731,10 @@ class BMapRule{
     private function from_string($val){  return htmlentities($val,ENT_NOQUOTES,'UTF-8'); }
     private function to_datetime($val){  return strtotime($val);   }
     private function from_datetime($val){  return date($this->fmt,$val);  }
-    private function to_bool($val){  return ($val === "Y");   }
-    private function from_bool($val){  return $val ? "Y" : "N";   }
+    private function to_bool($val){  return (boolean)$val;   }
+    private function from_bool($val){  return intval($val);   }
+    private function to_bool_string($val){  return ($val==="Y");   }
+    private function from_bool_string($val){  return $val ? "Y" : "N";   }
     private function to_object($val){  return unserialize($val);   }
     private function from_object($val){  return serialize($val);   }
     private function to_json($val){  return json_decode($val,false);   }

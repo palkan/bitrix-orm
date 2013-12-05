@@ -7,7 +7,7 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/bitrix.orm.php');
+require_once(__DIR__.'/bitrix.orm.php');
 
 /**
  *

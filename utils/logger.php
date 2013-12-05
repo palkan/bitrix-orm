@@ -33,14 +33,8 @@ class Logger {
 
         if(Logger::$LEVEL < Logger::DEBUG) return;
 
-        if(is_object($object) && $public){
-            if($object instanceof tSerializable)
-                $o = $object->jsonData();
-            else
-                $o = get_object_vars($object);
-        }
-        else
-            $o =& $object;
+        $o = self::print_object($object);
+
         if(!$height){
             $heightBlock = "min-height: auto";
         } else {
@@ -61,6 +55,20 @@ class Logger {
     <?
 
 
+    }
+
+
+    private static function print_object($object){
+        if($object instanceof tSerializable)
+            return $object->jsonData();
+        elseif(is_array($object)){
+            $res = array();
+            foreach($object as $o) $res[] = self::print_object($o);
+            return $res;
+        }elseif(is_object($object))
+            return get_object_vars($object);
+        else
+            return $object;
     }
 
 

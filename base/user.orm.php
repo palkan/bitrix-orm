@@ -7,7 +7,7 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/bitrix.orm.php');
+require_once(__DIR__.'/bitrix.orm.php');
 
 class BitrixUserORM extends BitrixORM{
 
@@ -259,7 +259,7 @@ class BitrixORMMapUser extends BitrixORMMap{
     public $fields = array(
         array('bname' => 'ID', 'name' => 'id', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'NAME', 'name' => 'name', 'type' => BitrixORMDataTypes::STRING),
-        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => BitrixORMDataTypes::BOOL),
+        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => BitrixORMDataTypes::BOOL_STRING),
         array('bname' => 'LAST_LOGIN', 'name' => 'last_login', 'type' => BitrixORMDataTypes::DATETIME),
         array('bname' => 'LAST_ACTIVITY_DATE','name' => 'last_activity', 'type' => BitrixORMDataTypes::DATETIME),
         array('bname' => 'LAST_NAME', 'name' => 'last_name', 'type' => BitrixORMDataTypes::STRING),

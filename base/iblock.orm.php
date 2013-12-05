@@ -7,7 +7,7 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/bitrix.orm.php');
+require_once(__DIR__.'/bitrix.orm.php');
 
 
 if(class_exists('CModule')){
@@ -128,7 +128,10 @@ class IBlockORM extends BitrixORM{
 
         if(is_null($this->_id)) return false;
 
-        if(!\CIBlockElement::Delete($this->_id)){
+        $el = new \CIBlockElement();
+
+        if(!$el->Delete($this->_id)){
+            Logger::log(array('action' => 'delete_element', 'id' => $this->_id, 'message' => $el->LAST_ERROR),"error");
             return false;
         }
 
@@ -228,7 +231,7 @@ class IBlockORMMap extends BitrixORMMap{
     public $fields = array(
         array('bname' => 'ID', 'name' => 'id', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'NAME', 'name' => 'name', 'type' => BitrixORMDataTypes::STRING),
-        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => BitrixORMDataTypes::BOOL),
+        array('bname' => 'ACTIVE', 'name' => 'active', 'type' => BitrixORMDataTypes::BOOL_STRING),
         array('bname' => 'DATE_ACTIVE_FROM', 'name' => 'date_active_from', 'type' => BitrixORMDataTypes::DATETIME),
         array('bname' => 'DATE_ACTIVE_TO','name' => 'date_active_to', 'type' => BitrixORMDataTypes::DATETIME),
         array('bname' => 'PREVIEW_TEXT', 'name' => 'preview_text', 'type' => BitrixORMDataTypes::STRING),
