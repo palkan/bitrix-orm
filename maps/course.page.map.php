@@ -7,11 +7,13 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../base/iblock.orm.php');
+require(__DIR__.'/config/course.page.config.php');
+require_once(__DIR__.'/../base/iblock.orm.php');
+
 
 class CoursePageMap extends IBlockORMMap{
 
-    public $iblock_id = 37;
+    public $iblock_id = _CoursePageIblockId;
 
     public $props = array(
         array('bname' => 'PARTNER', 'name' => 'partner_id', 'type' => BitrixORMDataTypes::INT),
@@ -22,30 +24,16 @@ class CoursePageMap extends IBlockORMMap{
             'type' => BitrixORMDataTypes::STRING,
             'list' =>
             array(
-                array('value' => 'image', 'bvalue' => 'IMG', 'enum_id' => 88),
-                array('value' => 'video', 'bvalue' => 'VIDEO', 'enum_id' => 89),
-                array('value' => 'flash', 'bvalue' => 'FLASH', 'enum_id' => 90),
-                array('value' => 'custom', 'bvalue' => 'CUSTOM', 'enum_id' => 91),
-                array('value' => 'html', 'bvalue' => 'HTML', 'enum_id' => 92),
+                array('value' => 'image', 'bvalue' => 'IMG', 'enum_id' => _CoursePageTypeImage),
+                array('value' => 'video', 'bvalue' => 'VIDEO', 'enum_id' => _CoursePageTypeVideo),
+                array('value' => 'flash', 'bvalue' => 'FLASH', 'enum_id' => _CoursePageTypeFlash),
+                array('value' => 'custom', 'bvalue' => 'CUSTOM', 'enum_id' => _CoursePageTypeCustom),
+                array('value' => 'html', 'bvalue' => 'HTML', 'enum_id' => _CoursePageTypeHtml),
             )
         )),
-        array('bname' => 'HAS_AUDIO', 'name' => 'has_audio', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
-            'type' => BitrixORMDataTypes::BOOL,
-            'list' =>
-            array(
-                array('value' => true, 'bvalue' => 'Y', 'enum_id' => 93),
-                array('value' => false, 'bvalue' => 'N', 'enum_id' => 94)
-            )
-        )),
+        array('bname' => 'HAS_AUDIO', 'name' => 'has_audio', 'type' => BitrixORMDataTypes::BOOL),
         array('bname' => 'AUDIO', 'name' => 'audio', 'type' => BitrixORMDataTypes::FILE),
-        array('bname' => 'HAS_TITLE', 'name' => 'has_title', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
-            'type' => BitrixORMDataTypes::BOOL,
-            'list' =>
-            array(
-                array('value' => true, 'bvalue' => 'Y', 'enum_id' => 95),
-                array('value' => false, 'bvalue' => 'N', 'enum_id' => 96)
-            )
-        )),
+        array('bname' => 'HAS_TITLE', 'name' => 'has_title', 'type' => BitrixORMDataTypes::BOOL),
         array('bname' => 'TITLE', 'name' => 'title', 'type' => BitrixORMDataTypes::STRING),
         array('bname' => 'DATA', 'name' => 'data', 'type' => BitrixORMDataTypes::JSON)
     );

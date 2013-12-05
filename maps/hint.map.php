@@ -7,11 +7,12 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../base/iblock.orm.php');
+require(__DIR__.'/config/hint.config.php');
+require_once(__DIR__.'/../base/iblock.orm.php');
 
 class HintMap extends IBlockORMMap{
 
-    public $iblock_id = 35;
+    public $iblock_id = _HintIblockId;
 
     public $props = array(
         array('bname' => 'CODE', 'name' => 'code', 'type' => BitrixORMDataTypes::INT),

@@ -7,8 +7,8 @@
 
 namespace ru\teachbase;
 
-require(dirname(__FILE__) . '/../maps/partner.map.php');
-require_once(dirname(__FILE__).'/tariff.php');
+require(__DIR__ . '/../maps/partner.map.php');
+require_once(__DIR__.'/tariff.php');
 
 /**
  * Partner model
@@ -139,7 +139,7 @@ class Partner extends Assignable{
      * @return bool|Relation
      */
 
-    public function changeRole($partner_id, $user_id, $new_role){
+    public static function changeRole($partner_id, $user_id, $new_role){
 
         $rel = AssignManager::find($user_id,$partner_id);
 

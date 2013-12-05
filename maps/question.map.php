@@ -7,11 +7,12 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../base/iblock.orm.php');
+require(__DIR__.'/config/question.config.php');
+require_once(__DIR__.'/../base/iblock.orm.php');
 
 class QuestionMap extends IBlockORMMap{
 
-    public $iblock_id = 32;
+    public $iblock_id = _QuestionIblockId;
 
     public $props = array(
         array('bname' => 'PARTNER', 'name' => 'partner_id', 'type' => BitrixORMDataTypes::INT),
@@ -25,12 +26,12 @@ class QuestionMap extends IBlockORMMap{
             'type' => BitrixORMDataTypes::STRING,
             'list' =>
                 array(
-                   array('value' => 'short', 'bvalue' => 'SHORT', 'enum_id' => 61),
-                    array('value' => 'single_choice', 'bvalue' => 'SINGLE_CHOICE', 'enum_id' => 62),
-                    array('value' => 'multiple_choice', 'bvalue' => 'MULTIPLE_CHOICE', 'enum_id' => 63),
-                    array('value' => 'order', 'bvalue' => 'ORDER', 'enum_id' => 65),
-                    array('value' => 'match', 'bvalue' => 'MATCH', 'enum_id' => 64),
-                   array('value' => 'open', 'bvalue' => 'OPEN', 'enum_id' => 70)
+                   array('value' => 'short', 'bvalue' => 'SHORT', 'enum_id' => _QuestionTypeShort),
+                    array('value' => 'single_choice', 'bvalue' => 'SINGLE_CHOICE', 'enum_id' => _QuestionTypeSingleChoice),
+                    array('value' => 'multiple_choice', 'bvalue' => 'MULTIPLE_CHOICE', 'enum_id' => _QuestionTypeMultipleChoice),
+                    array('value' => 'order', 'bvalue' => 'ORDER', 'enum_id' => _QuestionTypeOrder),
+                    array('value' => 'match', 'bvalue' => 'MATCH', 'enum_id' => _QuestionTypeMatch),
+                   array('value' => 'open', 'bvalue' => 'OPEN', 'enum_id' => _QuestionTypeOpen)
                 )
         ))
 

@@ -7,7 +7,7 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../base/custom.orm.php');
+require_once(__DIR__.'/../base/custom.orm.php');
 
 class AssignRelationMap extends CustomORMMap{
 

@@ -7,11 +7,12 @@
 
 namespace ru\teachbase;
 
-require_once(dirname(__FILE__).'/../assign/assignable.php');
+require(__DIR__.'/config/course.template.config.php');
+require_once(__DIR__.'/../assign/assignable.php');
 
 class CourseTemplateMap extends AssignableMap{
 
-    public $iblock_id = 36;
+    public $iblock_id = _CourseTemplateIblockId;
 
     public $assign_code = 'COURSE';
 
@@ -19,22 +20,8 @@ class CourseTemplateMap extends AssignableMap{
         array('bname' => 'PARTNER', 'name' => 'partner_id', 'type' => BitrixORMDataTypes::INT),
         array('bname' => 'COVER_IMG', 'name' => 'cover_img', 'type' => BitrixORMDataTypes::FILE),
         array('bname' => 'PAGES_NUM', 'name' => 'pages_num', 'type' => BitrixORMDataTypes::INT),
-        array('bname' => 'EDITABLE', 'name' =>'editable', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
-            'type' => BitrixORMDataTypes::BOOL,
-            'list' =>
-                array(
-                   array('value' => true, 'bvalue' => 'Y', 'enum_id' => 86),
-                   array('value' => false, 'bvalue' => 'N', 'enum_id' => 87)
-                )
-        )),
-        array('bname' => 'IS_PUBLIC', 'name' => 'is_public', 'type' => BitrixORMDataTypes::ENUM, 'data' => array(
-            'type' => BitrixORMDataTypes::BOOL,
-            'list' =>
-            array(
-                array('value' => true, 'bvalue' => 'Y', 'enum_id' => 85),
-                array('value' => false, 'bvalue' => 'N', 'enum_id' => 84)
-            )
-        )),
+        array('bname' => 'EDITABLE', 'name' =>'editable', 'type' => BitrixORMDataTypes::BOOL),
+        array('bname' => 'IS_PUBLIC', 'name' => 'is_public', 'type' => BitrixORMDataTypes::BOOL),
     );
 
 

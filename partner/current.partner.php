@@ -25,13 +25,13 @@ class CurrentPartner{
      * @var int
      */
 
-    public $id;
+    public $id=0;
 
     /**
      * @var string
      */
 
-    public $name;
+    public $name="";
 
 
     /**
@@ -42,14 +42,14 @@ class CurrentPartner{
      * @var string|bool
      */
 
-    public $logo;
+    public $logo="";
 
 
     /**
      * @var string|bool
      */
 
-    public $subdomain;
+    public $subdomain="";
 
 
     private $_initialized = false;

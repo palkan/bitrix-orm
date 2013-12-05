@@ -30,7 +30,7 @@ class CurrentUser
      * @var int
      */
 
-    public $id;
+    public $id=0;
 
     /**
      * User's full name
@@ -38,7 +38,7 @@ class CurrentUser
      * @var string
      */
 
-    public $fullname;
+    public $fullname="";
 
     /**
      *
@@ -47,7 +47,7 @@ class CurrentUser
      * @var string
      */
 
-    public $login;
+    public $login="";
 
 
     /**
@@ -57,7 +57,7 @@ class CurrentUser
      * @var int
      */
 
-    public $role;
+    public $role=0;
 
     /**
      *
@@ -66,7 +66,7 @@ class CurrentUser
      * @var string|bool
      */
 
-    public $photo;
+    public $photo="";
 
 
     /**
@@ -74,7 +74,7 @@ class CurrentUser
      * @var int
      */
 
-    public $hints;
+    public $hints=0;
 
 
     /**
@@ -82,7 +82,7 @@ class CurrentUser
      * @var bool
      */
 
-    public $show_hints;
+    public $show_hints=true;
 
 
     /**
@@ -158,7 +158,7 @@ class CurrentUser
 
                     $this->partner = new CurrentPartner();
 
-                    if (count($user->partners()) === 1)
+                    if (count($user->partners()) >= 1)   //temp!
                         $this->set_partner(reset($user->partners()));
                     elseif(count($user->partners()) > 1)
                         LocalRedirect('/account/');
@@ -181,6 +181,8 @@ class CurrentUser
                 $this->id = session(self::PREFIX . 'guest/id');
                 $this->fullname = session(self::PREFIX . 'guest/fullname');
 
+                $this->partner = new CurrentPartner();
+
                 if($this->fullname) $this->_is_guest = true;
 
             } else {
@@ -190,6 +192,10 @@ class CurrentUser
                 if(defined("LOGGER"))  Logger::print_debug("Login as guest from session");
 
                 $this->id = session('sess_guest_id');
+
+                $this->role = UserRoles::GUEST;
+
+                $this->partner = new CurrentPartner();
 
                 session(self::PREFIX.'guest/id',$this->id);
 
@@ -245,7 +251,7 @@ class CurrentUser
      */
 
     public function is_specialist(){
-        return ($this->role & UserRoles::SPECIALIST);
+        return ($this->role & UserRoles::SPECIALIST_FLAG);
     }
 
     /**
@@ -253,7 +259,7 @@ class CurrentUser
      */
 
     public function is_manager(){
-        return ($this->role & UserRoles::MANAGER);
+        return ($this->role & UserRoles::MANAGER_FLAG);
     }
 
     /**

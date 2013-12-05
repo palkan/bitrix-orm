@@ -329,6 +329,8 @@ class Document extends Assignable
 
         if (class_exists('CFile')) {
 
+            //todo: delete recording and converted files
+
             if ($this->_file) {
                 \CFile::Delete($this->_file->id);
             }
@@ -339,7 +341,7 @@ class Document extends Assignable
         } else
             Logger::log(__CLASS__ . ":" . __LINE__ . " CFile is not found; id: " . $this->_id, "error");
 
-        parent::delete();
+        return parent::delete();
     }
 
 
@@ -948,7 +950,7 @@ class Document extends Assignable
         if (preg_match('/^(?:[^:]+:\/\/)?(?:.+\/)?([^\/]+)\.([\w\d]+)$/', $path, $matches)) {
 
             $res->name = $matches[1];
-            $res->ext = $matches[2];
+            $res->ext = strtolower($matches[2]);
 
         } else {
             $res->name = $path;

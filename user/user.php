@@ -160,7 +160,10 @@ class UserRoles{
 
     const GUEST = 0;
     const LISTENER = 1;
+
+    const SPECIALIST_FLAG = 2;
+    const MANAGER_FLAG = 4;
+
     const SPECIALIST = 3;
     const MANAGER = 7;
-
 }

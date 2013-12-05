@@ -7,11 +7,12 @@
 
 namespace ru\teachbase;
 
+require(__DIR__.'/config/meeting.config.php');
 require_once(__DIR__.'/../assign/assignable.php');
 
 class MeetingMap extends AssignableMap{
 
-    public $iblock_id = 14;
+    public $iblock_id = _MeetingIblockId;
 
     public $assign_code = 'MEETING';
 
@@ -24,8 +25,8 @@ class MeetingMap extends AssignableMap{
             'type' => BitrixORMDataTypes::STRING,
             'list' =>
                 array(
-                   array('value' => 'public', 'bvalue' => 'OPEN', 'enum_id' => 34),
-                   array('value' => 'private', 'bvalue' => 'CLOSE', 'enum_id' => 35)
+                   array('value' => 'public', 'bvalue' => 'OPEN', 'enum_id' => _MeetingTypePublic),
+                   array('value' => 'private', 'bvalue' => 'CLOSE', 'enum_id' => _MeetingTypePrivate)
                 )
         ))
     );

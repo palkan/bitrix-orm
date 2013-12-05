@@ -8,7 +8,7 @@
 namespace ru\teachbase;
 
 
-require_once(dirname(__FILE__).'/../base/user.orm.php');
+require_once(__DIR__.'/../base/user.orm.php');
 
 class UserMap extends BitrixORMMapUser{
 
