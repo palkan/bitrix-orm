@@ -5,15 +5,13 @@ require_once(dirname(__FILE__) . '/../utils/logger.php');
 
 class RedisClient {
 
-    const REDIS = "10.59.55.82";
-
     /**
      * @return bool|\Redis
      */
 
     public static function get(){
         $redis = new \Redis();
-        if($redis->connect(self::REDIS)){
+        if($redis->connect(REDIS_HOST)){
 
             return $redis;
 

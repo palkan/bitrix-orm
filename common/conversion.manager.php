@@ -108,6 +108,7 @@ class ConversionManager {
                     $task->status = 'complete';
 
                     $redis->set(self::RDB.$id,json_encode($task));
+                    $redis->expire(self::RDB.$id,60*10);
 
                     foreach($task->listeners as $l) self::invoke_listener($l,$post_data);
 
