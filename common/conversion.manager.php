@@ -29,27 +29,20 @@ class ConversionManager {
 
     const CALLBACK = "/api/fyler/callback/";
 
-    const FYLER_HOST = 'http://dev1.teachbase.ru:8008/api/';
-
-    const FYLER_LOGIN = "fad";
-
-    const FYLER_PASSWORD = "gnwro3494GTY";
-
-
-
     /**
      *
      * Convert document using Fyler service.
      *
      * @param $id
      * @param $type
+     * @param $klass
      * @param $url
      * @param array $conversion_options
      * @param array $listeners
-     * @return bool|string
+     * @return bool
      */
 
-    public static function fyler_convert($id, $type, $url, $conversion_options = array(), $listeners = array()){
+    public static function fyler_convert($id, $type, $klass, $url, $conversion_options = array(), $listeners = array()){
 
         $redis = RedisClient::get();
 
@@ -61,15 +54,16 @@ class ConversionManager {
             $data = array(
                 'type' => $type,
                 'id' => $id,
+                'klass' => $klass,
                 'listeners' => $listeners,
                 'status' => 'progress'
             );
 
             $conversion_options['callback'] = "http://".$_SERVER['HTTP_HOST'].self::CALLBACK.$key;
 
-            $fyler = new FylerAPI(self::FYLER_HOST);
+            $fyler = new FylerAPI('http://'.FYLER_HOST.':8008/api/');
 
-            $fyler->login(self::FYLER_LOGIN,self::FYLER_PASSWORD);
+            $fyler->login(FYLER_LOGIN,FYLER_PASSWORD);
 
             if($fyler->send_task($type,$url,$conversion_options)){
                 $redis->set($key,json_encode($data));
@@ -104,11 +98,13 @@ class ConversionManager {
                 $data->type = $task->type;
                 $data->id = $task->id;
 
-                $doc = Document::find_by_id($task->id);
+                $klass = $task->klass;
 
-                if($doc){
+                $target = $klass::find_by_id($task->id);
 
-                    $doc->conversion_complete($data);
+                if($target){
+
+                    $target->conversion_complete($data);
                     $task->status = 'complete';
 
                     $redis->set(self::RDB.$id,json_encode($task));
@@ -117,6 +113,8 @@ class ConversionManager {
 
                 }else
                     Logger::log(__CLASS__.":".__LINE__." Document not found $task->id","warning");
+
+
             }
 
             $redis->close();

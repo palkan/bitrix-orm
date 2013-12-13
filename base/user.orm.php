@@ -34,6 +34,9 @@ class BitrixUserORM extends BitrixORM{
     private $_password_hash;
     private $_check_word;
 
+    private $_internal_fields = array();
+
+
     //---- Begin: Common fields ----//
 
     /**
@@ -124,8 +127,30 @@ class BitrixUserORM extends BitrixORM{
      */
 
     public function set_checkword($check_word, $immediate = true){
-        $u = new \CUser();
-        $u->Update($this->_id, array("CHECKWORD" => $check_word));
+        if($immediate){
+            $u = new \CUser();
+            $u->Update($this->_id, array("CHECKWORD" => $check_word));
+        }else
+            $this->_internal_fields['CHECKWORD'] = $check_word;
+    }
+
+
+    /**
+     * Update user's password
+     *
+     * @param $password
+     * @param bool $immediate If true then update user now else update on explicit <i>save()</i>
+     */
+
+    public function set_password($password, $immediate = true){
+        if($immediate){
+            $u = new \CUser();
+            $u->Update($this->_id, array("PASSWORD" => $password, "CONFIRM_PASSWORD"  => $password));
+        }else{
+            $this->_internal_fields['PASSWORD'] = $password;
+            $this->_internal_fields['CONFIRM_PASSWORD'] = $password;
+        }
+
     }
 
 
@@ -185,6 +210,11 @@ class BitrixUserORM extends BitrixORM{
 
         $arFields = array_merge($data->fields,$this->prefix_props($data->props));
 
+        if(count($this->_internal_fields)){
+            $arFields = array_merge($arFields,$this->_internal_fields);
+            $this->_internal_fields = array();
+        }
+
         if(defined('LOGGER')) Logger::print_debug($arFields);
 
         if($ID = $usr->Add($arFields)){
@@ -205,6 +235,10 @@ class BitrixUserORM extends BitrixORM{
 
         $arFields = array_merge($data->fields,$this->prefix_props($data->props));
 
+        if(count($this->_internal_fields)){
+            $arFields = array_merge($arFields,$this->_internal_fields);
+            $this->_internal_fields = array();
+        }
 
         if(defined('LOGGER')) Logger::print_debug($arFields);
 

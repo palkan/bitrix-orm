@@ -66,7 +66,7 @@ class CurrentUser
      * @var string|bool
      */
 
-    public $photo="";
+    public $photo="/bitrix/templates/main/images/avatar.png";
 
 
     /**
@@ -143,7 +143,7 @@ class CurrentUser
 
                     $this->fullname = $user->name();
                     $this->login = $user->login();
-                    $this->photo = $user->photo_path();
+                    if($user->photo_path()) $this->photo = $user->photo_path();
                     $this->hints = $user->hints();
                     $this->show_hints = $user->show_hints();
 

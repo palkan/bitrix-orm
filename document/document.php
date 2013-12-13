@@ -378,6 +378,7 @@ class Document extends Assignable
         //todo:
     }
 
+
     /**
      * @param $path string
      */
@@ -436,7 +437,7 @@ class Document extends Assignable
             return false;
         }
 
-        $key = ConversionManager::fyler_convert($this->_id, 'doc_to_pdf', $this->_file->path, array(), $listeners);
+        $key = $this->convert('doc_to_pdf', $this->_file->path, array(), $listeners);
 
         if ($key) {
             $data = $this->data() ? $this->data() : new \stdClass();
@@ -471,7 +472,7 @@ class Document extends Assignable
             || $this->_type == DocumentType::TABLE)
             return $this->build_thumbs($listeners);//$key = ConversionManager::fyler_convert($this->_id, 'pdf_thumb', $this->pdf(), array(), $listeners);
         elseif($this->_type == DocumentType::IMAGE)
-            $key = ConversionManager::fyler_convert($this->_id, 'image_thumb', $this->_file->path, array(), $listeners);
+            $key = $this->convert('image_thumb', $this->_file->path, array(), $listeners);
         else{
             Logger::log(__CLASS__ . ":" . __LINE__ . " Action is not possible, this type is " . $this->_type.", id: ".$this->_id, "warning");
             return false;
@@ -519,8 +520,8 @@ class Document extends Assignable
             return false;
         }
 
-        if ($this->pdf()) $key = ConversionManager::fyler_convert($this->_id, 'pdf_to_thumbs', $this->pdf(), array(), $listeners);
-        else $key = ConversionManager::fyler_convert($this->_id, 'doc_to_pdf_thumbs', $this->_file->path, array(), $listeners);
+        if ($this->pdf()) $key = $this->convert('pdf_to_thumbs', $this->pdf(), array(), $listeners);
+        else $key = $this->convert('doc_to_pdf_thumbs', $this->_file->path, array(), $listeners);
 
         if ($key) {
             $data = $this->data() ? $this->data() : new \stdClass();
@@ -562,9 +563,9 @@ class Document extends Assignable
         }
 
         if(is_null($split_data))
-            $key = ConversionManager::fyler_convert($this->_id, 'pdf_to_pages', $this->pdf(),array(),$listeners);
+            $key = $this->convert('pdf_to_pages', $this->pdf(),array(),$listeners);
         else
-            $key = ConversionManager::fyler_convert($this->_id, 'pdf_split_pages', $this->pdf(), array("split" => $split_data),$listeners);
+            $key = $this->convert('pdf_split_pages', $this->pdf(), array("split" => $split_data),$listeners);
 
         if ($key) {
             $data = $this->data() ? $this->data() : new \stdClass();
@@ -602,11 +603,11 @@ class Document extends Assignable
 
         if ($this->pdf()){
             if ($this->_data && $this->_data->thumbs)
-                $key = ConversionManager::fyler_convert($this->_id, 'pdf_to_swf', $this->pdf(),array(),$listeners);
+                $key = $this->convert('pdf_to_swf', $this->pdf(),array(),$listeners);
             else
-                $key = ConversionManager::fyler_convert($this->_id, 'pdf_to_swf_thumbs', $this->pdf(),array(),$listeners);
+                $key = $this->convert('pdf_to_swf_thumbs', $this->pdf(),array(),$listeners);
         }
-        else $key = ConversionManager::fyler_convert($this->_id, 'doc_to_pdf_swf', $this->_file->path,array(),$listeners);
+        else $key = $this->convert('doc_to_pdf_swf', $this->_file->path,array(),$listeners);
 
         if ($key) {
             $data = $this->data() ? $this->data() : new \stdClass();
@@ -615,49 +616,6 @@ class Document extends Assignable
             return true;
         } else
             return false;
-    }
-
-
-    /**
-     *
-     * Run converter task to create hls from meeting recording flv video.
-     *
-     * @param array $listeners  Additional URLs to invoke on task complete.
-     * @return bool
-     */
-
-    public function build_hls_recording($listeners = array())
-    {
-
-        if ($this->_type != DocumentType::RECORDING)
-        {
-            Logger::log(__CLASS__ . ":" . __LINE__ . " Action is not possible, this type is " . $this->_type.", id: ".$this->_id, "error");
-            return false;
-        }
-
-
-        if ($this->_data && $this->_data->task_key) {
-            Logger::log("Task in progress: " . $this->_data->task_key.", id: ".$this->_id, "error");
-            return false;
-        }
-
-
-        if (!$this->_data || !property_exists($this->_data,"stream_to_convert")) {
-            Logger::log("No stream to convert in data, id: ".$this->_id, "error");
-            return false;
-        }
-
-        $key = ConversionManager::fyler_convert($this->_id, 'flv_to_hls', $this->_data->url.$this->_data->stream_to_convert->name.".flv", array("target_dir" => $this->_data->url.$this->_data->stream_to_convert->name."/", "stream_type" => $this->_data->stream_to_convert->type), $listeners);
-
-        if ($key) {
-            $data = $this->data() ? $this->data() : new \stdClass();
-            $data->converting = true;
-            $data->task_key = $key;
-            $this->data($data);
-            return true;
-        } else
-            return false;
-
     }
 
 
@@ -685,6 +643,21 @@ class Document extends Assignable
         $this->$handler($result);
 
         $this->save();
+
+    }
+
+    /**
+     * @param $type
+     * @param $path
+     * @param $params
+     * @param $listeners
+     * @return bool
+     */
+
+    private function convert($type, $path, $params, $listeners){
+
+        return ConversionManager::fyler_convert($this->_id, $type, self::className(), $path, $params, $listeners);
+
     }
 
 
@@ -905,30 +878,7 @@ class Document extends Assignable
 
     private function flv_to_hls($result)
     {
-        $data = $this->data();
-
-        if($this->_type == DocumentType::RECORDING){
-            unset($data->stream_to_convert);
-
-            if(count($data->streams)){
-
-                $data->stream_to_convert = current($data->streams);
-
-                $this->data($data);
-
-                if($this->build_hls_recording() !== false){
-                    $data = $this->data();
-                    array_shift($data->streams);
-                }else{
-                    Logger::log("Failed to run new task for converting another hls stream, id: ".$this->_id, "error");
-                }
-            }else
-                $data->converting = false;
-        }else{
-            Logger::log("flv_to_hls for not recording is not implemented yet, id: ".$this->_id, "error");
-        }
-
-        $this->data($data);
+        Logger::log("flv_to_hls for not recording is not implemented yet, id: ".$this->_id, "error");
     }
 
     ///------------------------------------------------------------------------///
@@ -1059,6 +1009,13 @@ class DocumentType
             return self::OTHER;
     }
 
+}
+
+
+class DocumentShareType{
+    const VIEW = 1;
+    const DOWNLOAD = 2;
+    const EDIT = 4;
 }
 
 

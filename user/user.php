@@ -146,8 +146,18 @@ class User extends BitrixUserORM{
         $data = parent::jsonData();
 
         if(!is_null($this->_partners)) $data->partners = array_map(function($p){ return $p->jsonData();}, array_values($this->_partners));
-
+        if(!is_null($this->_photo_path)) $data->photo_path = $this->_photo_path;
+        else $data->photo_path = '/bitrix/templates/main/images/avatar.png';
         return $data;
+    }
+
+
+    public static function create_by_email($email){
+        $user = new User();
+        $user->email($email);
+        $user->login($email);
+        $user->set_password(rand_string(8),false);
+        return $user->save();
     }
 
 }

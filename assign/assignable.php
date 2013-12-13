@@ -46,7 +46,7 @@ class Assignable extends IBlockORM
      *
      *
      * @param $user_roles  array Associative array [user_id] => [user_role]
-     * @return bool
+     * @return array Added relations
      */
 
     protected function _assign($user_roles)
@@ -88,7 +88,7 @@ class Assignable extends IBlockORM
 
         $this->users();
 
-        return true;
+        return $to_add;
     }
 
 
@@ -97,7 +97,7 @@ class Assignable extends IBlockORM
      *  Remove users from assigned
      *
      * @param $user_ids array
-     * @return bool
+     * @return array Removed relations
      */
 
 
@@ -127,7 +127,7 @@ class Assignable extends IBlockORM
 
         $this->users();
 
-        return true;
+        return $to_remove;
 
     }
 

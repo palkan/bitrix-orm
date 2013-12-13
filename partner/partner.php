@@ -119,7 +119,7 @@ class Partner extends Assignable{
      * @return Relation|bool
      */
 
-    public static function addUser($partner_id, $user_id, $role = UserRoles::LISTENER){
+    public static function add_user($partner_id, $user_id, $role = UserRoles::LISTENER){
 
         $rel = new Relation();
 
@@ -139,7 +139,7 @@ class Partner extends Assignable{
      * @return bool|Relation
      */
 
-    public static function changeRole($partner_id, $user_id, $new_role){
+    public static function change_role($partner_id, $user_id, $new_role){
 
         $rel = AssignManager::find($user_id,$partner_id);
 
@@ -160,7 +160,7 @@ class Partner extends Assignable{
      * @return bool
      */
 
-    public static function removeUser($partner_id, $user_id){
+    public static function remove_user($partner_id, $user_id){
         return AssignManager::delete($user_id,$partner_id);
     }
 
@@ -173,8 +173,6 @@ class Partner extends Assignable{
 
         return $data;
     }
-
-
 
 }
 

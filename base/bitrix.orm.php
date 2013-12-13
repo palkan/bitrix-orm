@@ -14,6 +14,12 @@ require_once(__DIR__.'/../utils/logger.php');
 
 abstract class BitrixORM implements tSerializable{
 
+    /**
+     * 'find' flags
+     */
+
+    const TO_DATA = 1;
+
 
     private static $maps = array();
 
@@ -186,10 +192,9 @@ abstract class BitrixORM implements tSerializable{
 
             if($instance->mapref->has_id){
                 $el->_id = intval($arElement[$instance->mapref->GetBitrixKey('id')]);
-
-                $results[$el->_id] = static::cache($el);
+                $results[$el->_id] = ($flags & BitrixORM::TO_DATA) ? $el->jsonData() : static::cache($el);
             }else
-                $results[] = $el;
+                $results[] = ($flags & BitrixORM::TO_DATA) ? $el->jsonData() : $el;
         }
 
         if($navigation){
@@ -944,7 +949,7 @@ class BNav{
 
         }
 
-        return $arSort;
+        return count($arSort) ? $arSort : false;
 
     }
 

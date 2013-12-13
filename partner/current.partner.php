@@ -42,7 +42,7 @@ class CurrentPartner{
      * @var string|bool
      */
 
-    public $logo="";
+    public $logo="/bitrix/templates/main/images/bg/logo.png";
 
 
     /**
@@ -97,7 +97,8 @@ class CurrentPartner{
     public function login(Partner $partner){
 
         $this->id = session(self::PREFIX.'id',$partner->id());
-        $this->logo = session(self::PREFIX.'logo',$partner->logo_path());
+        if($partner->logo_path()) $this->logo = session(self::PREFIX.'logo',$partner->logo_path());
+        else  session(self::PREFIX.'logo',$this->logo);
         $this->name = session(self::PREFIX.'name',$partner->name());
         $this->subdomain = session(self::PREFIX.'subdomain',$partner->subdomain());
         $this->_initialized = true;

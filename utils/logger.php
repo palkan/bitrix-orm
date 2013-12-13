@@ -33,7 +33,10 @@ class Logger {
 
         if(Logger::$LEVEL < Logger::DEBUG) return;
 
-        $o = self::print_object($object);
+        if($public)
+            $o = self::print_object($object,$public);
+        else
+            $o = $object;
 
         if(!$height){
             $heightBlock = "min-height: auto";
@@ -63,7 +66,7 @@ class Logger {
             return $object->jsonData();
         elseif(is_array($object)){
             $res = array();
-            foreach($object as $o) $res[] = self::print_object($o);
+            foreach($object as $key => $o) $res[$key] = self::print_object($o);
             return $res;
         }elseif(is_object($object))
             return get_object_vars($object);

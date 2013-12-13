@@ -286,6 +286,8 @@ function session($path, $val = null)
 
 function make_assoc($array,$field){
 
+    if(!count($array)) return array();
+
     $keys = array_map(function($obj) use ($field){ return $obj->$field();}, $array);
 
     return array_combine($keys,array_values($array));
@@ -399,6 +401,24 @@ function is_assoc_array($arr){
 
 /**
  *
+ * Convert array of objects to array of 'filtered' objects - with only selected fields.
+ *
+ * @param $arr
+ * @param $fields
+ * @return array
+ */
+
+
+function array_select($arr, $fields){
+    return array_map(function($el) use ($fields){
+        $data = new \stdClass();
+        foreach($fields as $f) $data->$f = $el->$f;
+        return $data;
+    },$arr);
+}
+
+/**
+ *
  * Convert time (as number of seconds) to readable string with respect to current time (e.g. "now", "in 2 minutes").
  *
  * @param $time int
@@ -410,4 +430,16 @@ function is_assoc_array($arr){
 function time_to_string($time){
   //todo:
     return date('d.m.Y H:i', $time);
+}
+
+
+/**
+ * @param $length
+ * @return string
+ */
+
+function rand_string($length) {
+    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    return substr(str_shuffle($chars),0,$length);
+
 }
