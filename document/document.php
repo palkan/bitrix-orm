@@ -646,6 +646,7 @@ class Document extends Assignable
 
     }
 
+
     /**
      * @param $type
      * @param $path

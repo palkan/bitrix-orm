@@ -105,7 +105,7 @@ class ConversionManager {
                 if($target){
 
                     $target->conversion_complete($data);
-                    $task->status = 'complete';
+                    $task->status = $data->status;
 
                     $redis->set(self::RDB.$id,json_encode($task));
                     $redis->expire(self::RDB.$id,60*10);
@@ -123,6 +123,8 @@ class ConversionManager {
         }
 
     }
+
+
 
     /**
      *
