@@ -21,6 +21,7 @@ require_once(dirname(__FILE__) . '/user.php');
  */
 
 
+
 class CurrentUser
 {
 
@@ -101,6 +102,7 @@ class CurrentUser
 
     function __construct()
     {
+        if(defined("LOGGER")) Logger::log("Authorization...", 'debug');
 
         if (!class_exists('CUser')) {
             Logger::log(__CLASS__ . ":" . __LINE__ . " CUser not found", "warning");
@@ -111,7 +113,7 @@ class CurrentUser
 
             $this->id = intval(\CUser::GetID());
 
-            if(defined("LOGGER")) Logger::print_debug("Authorized: " . $this->id);
+            if(defined("LOGGER")) Logger::log("Authorized: " . $this->id, 'debug');
 
             if (session(self::PREFIX.'registered')) {
 
@@ -136,6 +138,8 @@ class CurrentUser
                 }
 
             }else{
+
+                if(defined("LOGGER")) Logger::log("Not logged in: " . $this->id, 'debug');
 
                 $user = User::find_by_id($this->id);
 
@@ -162,8 +166,12 @@ class CurrentUser
                         $this->set_partner(reset($user->partners()));
                     elseif(count($user->partners()) > 1)
                         LocalRedirect('/account/');
-                    else
+                    else{
+                        Logger::log(__CLASS__ . ":" . __LINE__ . " User has no partners: id ".$this->id, "warning");
                         CurrentUser::logout();
+                    }
+
+
 
                 }else{
                     Logger::log(__CLASS__ . ":" . __LINE__ . " User not found: id ".$this->id, "warning");
@@ -171,6 +179,8 @@ class CurrentUser
             }
 
         } else {
+
+            if(defined("LOGGER"))  Logger::log("Not authorized", 'debug');
 
             if (session(self::PREFIX.'guest')) {
 

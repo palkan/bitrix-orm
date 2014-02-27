@@ -79,10 +79,10 @@ class User extends BitrixUserORM{
     /**
      * @param $email
      * @param $name
+     * @param string $password
      * @return $this
      */
-
-    public static function register($email, $name){
+    public static function register($email, $name, $password = ''){
 
         $user = new User();
 
@@ -90,6 +90,11 @@ class User extends BitrixUserORM{
         $user->email($email);
         $user->login($email);
         $user->name($name);
+
+        if ($password === '')
+            $password = rand_string(8);
+
+        $user->set_password($password,false);
 
         return $user->save();
     }

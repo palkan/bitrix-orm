@@ -190,6 +190,7 @@ abstract class BitrixORM implements tSerializable{
             $el->_created = true;
             $el->_flush();
 
+
             if($instance->mapref->has_id){
                 $el->_id = intval($arElement[$instance->mapref->GetBitrixKey('id')]);
                 $results[$el->_id] = ($flags & BitrixORM::TO_DATA) ? $el->jsonData() : static::cache($el);
