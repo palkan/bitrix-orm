@@ -17,7 +17,7 @@ class CSRF{
             $_SESSION['csrf'] = $this->token;
         }
         else
-            $this->token = $_SESSION['token'];
+            $this->token = $_SESSION['csrf'];
     }
 
 
@@ -27,7 +27,7 @@ class CSRF{
 
         if($clear){
             $this->token = '';
-            $_SESSION['csrf'] = '';
+            unset($_SESSION['csrf']);
         }
 
         return $token;
